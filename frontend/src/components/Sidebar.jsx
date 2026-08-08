@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, Award, LogOut } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Award, User, LogOut } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export default function Sidebar({ active = 'dashboard' }) {
     const navigate = useNavigate();
-    const { sessionId, interviewDone, logout } = useApp();
+    const { sessionId, logout } = useApp();
     const [toastMsg, setToastMsg] = useState(null);
 
     const showToast = (msg) => {
@@ -16,9 +16,10 @@ export default function Sidebar({ active = 'dashboard' }) {
     const handleLogout = () => { logout(); navigate('/'); };
 
     const navItems = [
-        { id: 'dashboard', label: 'Home', icon: <LayoutDashboard size={18} />, action: () => navigate('/dashboard'), locked: false },
-        { id: 'interview', label: 'Interview', icon: <MessageSquare size={18} />, action: () => { if (!sessionId) { showToast('Start an interview from the Dashboard first.'); return; } navigate('/interview'); }, locked: !sessionId },
-        { id: 'feedback', label: 'Feedback', icon: <Award size={18} />, action: () => { if (!interviewDone) { showToast('Complete the interview to view feedback.'); return; } navigate('/feedback'); }, locked: !interviewDone },
+        { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} />, action: () => navigate('/dashboard') },
+        { id: 'interview', label: 'Interview', icon: <MessageSquare size={18} />, action: () => { if (!sessionId) { showToast('Start an interview from the Dashboard first.'); return; } navigate('/interview'); } },
+        { id: 'feedback', label: 'Feedback', icon: <Award size={18} />, action: () => navigate('/feedback') },
+        { id: 'profile', label: 'Profile', icon: <User size={18} />, action: () => navigate('/profile') },
     ];
 
     return (
@@ -38,7 +39,7 @@ export default function Sidebar({ active = 'dashboard' }) {
                                 display: 'flex', alignItems: 'center', gap: 10,
                                 padding: '11px 14px', borderRadius: 9, width: '100%', textAlign: 'left',
                                 background: active === item.id ? 'var(--primary)' : 'transparent',
-                                color: active === item.id ? '#fff' : item.locked ? '#334155' : '#94A3B8',
+                                color: active === item.id ? '#fff' : '#94A3B8',
                                 fontSize: 14, fontWeight: 500, transition: 'all 0.15s',
                             }}
                             onMouseEnter={e => { if (active !== item.id) e.currentTarget.style.background = '#1E293B'; }}
@@ -46,7 +47,6 @@ export default function Sidebar({ active = 'dashboard' }) {
                         >
                             {item.icon}
                             <span style={{ flex: 1 }}>{item.label}</span>
-                            {item.locked && <span style={{ fontSize: 10, color: '#475569' }}>🔒</span>}
                         </button>
                     ))}
                 </nav>
@@ -62,15 +62,12 @@ export default function Sidebar({ active = 'dashboard' }) {
 
             {/* ── Mobile bottom bar ── */}
             <nav className="mobile-nav">
-                {navItems.map(item => (
+                {[...navItems, { id: 'logout', label: 'Logout', icon: <LogOut size={18} />, action: handleLogout }].map(item => (
                     <button key={item.id} className={`mobile-nav-btn${active === item.id ? ' active' : ''}`} onClick={item.action}>
                         {item.icon}
                         <span>{item.label}</span>
                     </button>
                 ))}
-                <button className="mobile-nav-btn" onClick={handleLogout}>
-                    <LogOut size={18} /><span>Logout</span>
-                </button>
             </nav>
 
             {/* ── Toast ── */}

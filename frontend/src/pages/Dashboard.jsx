@@ -1,46 +1,63 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, CalendarCheck, CalendarX, BookOpen, TrendingUp, PlayCircle } from 'lucide-react';
+import { User, CalendarCheck, CalendarX, BookOpen, TrendingUp, PlayCircle, ChevronRight, ServerOff } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useApp } from '../context/AppContext';
+import api from '../services/api';
 import { v4 as uuidv4 } from 'uuid';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+const initials = (name = '') =>
+    name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase()).join('');
 
 export default function Dashboard() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { candidate, setSessionId } = useApp();
+    const { candidate, beginInterview } = useApp();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [statsError, setStatsError] = useState('');
     const [starting, setStarting] = useState(false);
     const [startError, setStartError] = useState('');
+    const [backendUp, setBackendUp] = useState(null);
+    const [checkingHealth, setCheckingHealth] = useState(false);
     const redirectMsg = location.state?.msg || '';
+
+    const loadStats = useCallback(async () => {
+        if (!candidate?.member?.id) return;
+        setLoading(true); setStatsError('');
+        try {
+            const d = await api.getDashboard(candidate.member.id);
+            setStats(d.stats || null);
+        } catch (e) {
+            setStatsError(e.message);
+        } finally {
+            setLoading(false);
+        }
+    }, [candidate]);
+
+    const checkBackend = useCallback(async () => {
+        setCheckingHealth(true);
+        const up = await api.checkHealth();
+        setBackendUp(up);
+        setCheckingHealth(false);
+        return up;
+    }, []);
 
     useEffect(() => {
         if (!candidate) return;
-        fetch(`${API_BASE}/api/candidates/${candidate.member.id}/dashboard`)
-            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-            .then(d => { setStats(d.stats || null); setLoading(false); })
-            .catch(e => { setStatsError(e.message); setLoading(false); });
-    }, [candidate]);
+        loadStats();
+        checkBackend();
+    }, [candidate, loadStats, checkBackend]);
 
     const handleStartInterview = async () => {
-        if (!candidate) return;
+        if (!candidate || starting) return;
         setStarting(true); setStartError('');
+        // Unique session id created only when actually starting a new interview
         const sid = uuidv4();
         try {
-            const res = await fetch(`${API_BASE}/api/interview`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sessionId: sid, candidate })
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            // Store both the session ID and the first reply so LiveInterview can use it
-            setSessionId(sid);
-            sessionStorage.setItem('firstReply', data.reply || '');
+            const data = await api.startInterview(sid, candidate);
+            // Reset any previous conversation/feedback, set the new session
+            beginInterview(sid, data.reply || '');
             navigate('/interview');
         } catch (e) {
             setStartError('Failed to start interview: ' + e.message);
@@ -67,6 +84,11 @@ export default function Dashboard() {
                     .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
                     .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
                     .cta-row{ display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+                    .profile-card { display:flex; align-items:center; gap:16px; padding:16px 20px; background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); cursor:pointer; transition:border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease; -webkit-tap-highlight-color:transparent; }
+                    .profile-card:hover { border-color:var(--primary); box-shadow:var(--shadow-md); }
+                    .profile-card:active { transform:scale(0.99); }
+                    .profile-card:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+                    .profile-avatar { width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,#4F46E5,#7C3AED); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Outfit'; font-weight:700; font-size:20px; flex-shrink:0; }
                     @media(max-width:768px){
                         .dp { padding:20px 16px 80px; }
                         .grid-4 { grid-template-columns:1fr 1fr; }
@@ -76,20 +98,41 @@ export default function Dashboard() {
                 `}</style>
 
                 <div className="dp">
-                    {/* Header */}
-                    <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
-                        <div>
-                            <h2 style={{ fontSize: 'clamp(18px,3vw,24px)', margin: 0 }}>Welcome, {candidate.member.name} 👋</h2>
-                            <p style={{ color: 'var(--muted)', margin: '4px 0 0', fontSize: 13 }}>ID: {candidate.member.id}</p>
+                    {/* Header / Profile card — clickable → /profile */}
+                    <div
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Open profile"
+                        onClick={() => navigate('/profile')}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/profile'); } }}
+                        className="profile-card"
+                        style={{ marginBottom: 24 }}
+                    >
+                        <div className="profile-avatar">{initials(candidate.member.name)}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <h2 style={{ fontSize: 'clamp(17px,3vw,22px)', margin: 0 }}>Welcome, {candidate.member.name} 👋</h2>
+                            <p style={{ color: 'var(--muted)', margin: '4px 0 0', fontSize: 13 }}>ID: {candidate.member.id}{candidate.member.jobRole ? ` · ${candidate.member.jobRole}` : ''}</p>
                         </div>
-                        <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                            <User size={20} />
-                        </div>
-                    </header>
+                        <span className="profile-card-hint" style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--primary)', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
+                            <User size={15} /> <span className="profile-card-hint-text">View Profile</span> <ChevronRight size={16} />
+                        </span>
+                    </div>
 
                     {redirectMsg && <div className="banner-info" style={{ marginBottom: 16 }}>{redirectMsg}</div>}
                     {statsError && <div className="banner-warn" style={{ marginBottom: 16 }}>Stats unavailable: {statsError}</div>}
                     {startError && <div className="banner-error" style={{ marginBottom: 16 }}>{startError}</div>}
+
+                    {/* Backend unavailable */}
+                    {backendUp === false && (
+                        <div className="banner-error" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <ServerOff size={16} /> Backend unavailable. Unable to connect to the interview service.
+                            </span>
+                            <button onClick={checkBackend} disabled={checkingHealth} className="btn btn-secondary" style={{ padding: '8px 14px', fontSize: 13 }}>
+                                {checkingHealth ? 'Checking...' : 'Try Again'}
+                            </button>
+                        </div>
+                    )}
 
                     {/* Stats */}
                     {loading ? (
@@ -159,8 +202,10 @@ export default function Dashboard() {
                             <h3 style={{ fontSize: 17, margin: '0 0 4px' }}>Ready to start your interview?</h3>
                             <p style={{ color: 'var(--muted)', margin: 0, fontSize: 13 }}>The AI will evaluate you across your curriculum topics.</p>
                         </div>
-                        <button onClick={handleStartInterview} disabled={starting} className="btn btn-primary" style={{ minWidth: 180 }}>
-                            {starting ? 'Connecting...' : <><PlayCircle size={17} /> Start Interview</>}
+                        <button onClick={handleStartInterview} disabled={starting || backendUp === false} className="btn btn-primary" style={{ minWidth: 180 }}>
+                            {starting
+                                ? <><div className="spinner" style={{ width: 16, height: 16, borderWidth: 2, borderTopColor: '#fff' }} /> Connecting to interview...</>
+                                : <><PlayCircle size={17} /> Start Interview</>}
                         </button>
                     </div>
                 </div>

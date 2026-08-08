@@ -9,6 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const interviewRouter = require('./routes/interview');
+const candidatesRouter = require('./routes/candidates');
 
 // Middleware
 app.use(cors());
@@ -16,6 +17,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/interview', interviewRouter);
+app.use('/api/candidates', candidatesRouter);
 
 // Health-check endpoint
 app.get('/health', (req, res) => {

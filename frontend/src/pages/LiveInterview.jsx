@@ -1,21 +1,22 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, Mic, MicOff, Send, Volume2, VolumeX, User } from 'lucide-react';
+import { Bot, Mic, MicOff, Send, Volume2, VolumeX, User, RotateCcw } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useApp } from '../context/AppContext';
 import { useVoice } from '../hooks/useVoice';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+import api, { ApiError } from '../services/api';
 
 export default function LiveInterview() {
     const navigate = useNavigate();
-    const { candidate, sessionId, setFeedback, setInterviewDone } = useApp();
-    const [messages, setMessages] = useState([]);
+    const { candidate, sessionId, setFeedback, setInterviewDone, messages, setMessages } = useApp();
     const [input, setInput] = useState('');
     const [thinking, setThinking] = useState(false);
     const [error, setError] = useState('');
+    const [recovery, setRecovery] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(true);
     const chatEndRef = useRef(null);
+    const spokenRef = useRef(false);
+    const lastTextRef = useRef('');
 
     // Voice hook
     const { speak, stopSpeaking, startListening, stopListening, voiceStatus, isRecognitionSupported, isSynthSupported, cleanup } = useVoice({
@@ -25,35 +26,29 @@ export default function LiveInterview() {
     // Auto-scroll to bottom
     useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, thinking]);
 
-    // Cleanup voice on unmount
-    useEffect(() => () => cleanup(), []);
+    // Cleanup voice on unmount (navigation away / logout)
+    useEffect(() => () => { spokenRef.current = false; cleanup(); }, [cleanup]);
 
-    // Load first question (stored by Dashboard after POST /api/interview)
+    // Speak the opening AI question (only for a fresh interview)
     useEffect(() => {
-        const firstReply = sessionStorage.getItem('firstReply');
-        sessionStorage.removeItem('firstReply');
-        if (firstReply) {
-            setMessages([{ role: 'ai', text: firstReply }]);
-            if (voiceEnabled && isSynthSupported) speak(firstReply);
+        if (spokenRef.current) return;
+        if (messages.length === 1 && messages[0].role === 'ai') {
+            spokenRef.current = true;
+            if (voiceEnabled && isSynthSupported) speak(messages[0].text);
         }
-    }, []);
+    }, [messages, voiceEnabled, isSynthSupported, speak]);
 
     const sendMessage = useCallback(async (userText) => {
-        if (!userText?.trim()) return;
+        if (!userText?.trim() || thinking) return;
         const text = userText.trim();
+        lastTextRef.current = text;
         setInput('');
         setMessages(prev => [...prev, { role: 'user', text }]);
-        setThinking(true); setError('');
+        setThinking(true); setError(''); setRecovery(false);
         stopSpeaking();
 
         try {
-            const res = await fetch(`${API_BASE}/api/interview`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sessionId, message: text })
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
+            const data = await api.sendInterviewMessage(sessionId, text);
 
             if (data.done) {
                 cleanup();
@@ -66,10 +61,16 @@ export default function LiveInterview() {
                 if (voiceEnabled && isSynthSupported) speak(data.reply);
             }
         } catch (e) {
-            setError('Failed to send: ' + e.message);
             setThinking(false);
+            if (e instanceof ApiError && (e.status === 400 || e.code === 'candidate is required when starting an interview')) {
+                setRecovery(true);
+            } else {
+                setError('Failed to submit answer: ' + e.message);
+                // Restore the answer so the user can retry without retyping
+                setInput(lastTextRef.current);
+            }
         }
-    }, [sessionId, voiceEnabled, isSynthSupported, speak, stopSpeaking, cleanup, setFeedback, setInterviewDone, navigate]);
+    }, [sessionId, voiceEnabled, isSynthSupported, speak, stopSpeaking, cleanup, setFeedback, setInterviewDone, navigate, setMessages, thinking]);
 
     const handleSubmit = () => {
         if (!input.trim()) { setError('Please enter an answer.'); return; }
@@ -78,17 +79,23 @@ export default function LiveInterview() {
 
     const handleNotSure = () => sendMessage("I'm not sure about this. Can you give me a hint or move on?");
 
+    const handleRetry = () => sendMessage(lastTextRef.current || input);
+
     const toggleMic = () => {
         if (voiceStatus === 'listening') { stopListening(); }
         else { startListening(); }
     };
 
-    const voiceStatusLabel = {
-        idle: isRecognitionSupported ? 'Mic ready' : 'Voice input not supported',
-        listening: '🎙 Listening…',
-        speaking: '🔊 AI speaking…',
-        error: '⚠ Mic permission denied'
-    }[voiceStatus] || 'Ready';
+    const voiceStatusLabel = (() => {
+        if (!isRecognitionSupported) return 'Voice input is not supported in this browser. You can type your answer instead.';
+        if (thinking) return 'Processing answer…';
+        return {
+            idle: 'Mic ready',
+            listening: '🎙 Listening…',
+            speaking: '🔊 AI speaking…',
+            error: 'Microphone permission was denied. You can type your answer instead.'
+        }[voiceStatus] || 'Ready';
+    })();
 
     return (
         <div className="app-layout">
@@ -168,13 +175,24 @@ export default function LiveInterview() {
                     )}
 
                     {error && <div className="banner-error animate-in">{error}</div>}
+
+                    {recovery && (
+                        <div className="card animate-in" style={{ border: '1.5px solid #FECACA', textAlign: 'center', padding: 24, marginBottom: 12 }}>
+                            <p style={{ fontWeight: 600, margin: '0 0 6px', color: '#B91C1C' }}>Your previous interview session could not be restored.</p>
+                            <p style={{ color: 'var(--muted)', fontSize: 13, margin: '0 0 14px' }}>Start a new interview from the Dashboard.</p>
+                            <button onClick={() => { cleanup(); navigate('/dashboard'); }} className="btn btn-primary" style={{ gap: 8 }}>
+                                <RotateCcw size={15} /> Return to Dashboard
+                            </button>
+                        </div>
+                    )}
+
                     <div ref={chatEndRef} style={{ height: 1 }} />
                 </div>
 
                 {/* Footer */}
                 <div className="iv-footer">
                     {/* Voice status bar */}
-                    <div className="voice-bar">
+                    <div className="voice-bar" role="status" aria-live="polite">
                         <span className={voiceStatus === 'listening' ? 'pulse' : ''} style={{ fontSize: 16 }}>
                             {voiceStatus === 'listening' ? '🎙' : voiceStatus === 'speaking' ? '🔊' : '💬'}
                         </span>
@@ -186,7 +204,8 @@ export default function LiveInterview() {
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             placeholder="Type your answer… (Shift+Enter for new line)"
-                            disabled={thinking}
+                            aria-label="Your answer"
+                            disabled={thinking || recovery}
                             maxLength={1200}
                             className="input-field"
                             rows={3}
@@ -195,19 +214,36 @@ export default function LiveInterview() {
                         />
 
                         <div className="btn-row">
-                            <button onClick={handleSubmit} disabled={thinking || !input.trim()} className="btn btn-primary" style={{ height: 48 }}>
-                                <Send size={16} /> Submit
+                            <button onClick={handleSubmit} disabled={thinking || !input.trim() || recovery} className="btn btn-primary" style={{ height: 48 }}>
+                                {thinking
+                                    ? <><div className="spinner" style={{ width: 15, height: 15, borderWidth: 2, borderTopColor: '#fff' }} /> Submitting answer...</>
+                                    : <><Send size={16} /> Submit</>}
                             </button>
                             {isRecognitionSupported && (
-                                <button onClick={toggleMic} disabled={thinking} className={`btn ${voiceStatus === 'listening' ? 'btn-danger' : 'btn-secondary'}`} style={{ height: 48 }}>
+                                <button
+                                    onClick={toggleMic}
+                                    disabled={thinking || recovery}
+                                    className={`btn ${voiceStatus === 'listening' ? 'btn-danger' : 'btn-secondary'}`}
+                                    style={{ height: 48 }}
+                                    aria-label={voiceStatus === 'listening' ? 'Stop microphone' : 'Start microphone'}
+                                    title={voiceStatus === 'listening' ? 'Stop microphone' : 'Start microphone'}
+                                >
                                     {voiceStatus === 'listening' ? <MicOff size={16} /> : <Mic size={16} />}
                                 </button>
                             )}
-                            <button onClick={handleNotSure} disabled={thinking} className="btn btn-secondary" style={{ fontSize: 12, height: 48 }}>
+                            <button onClick={handleNotSure} disabled={thinking || recovery} className="btn btn-secondary" style={{ fontSize: 12, height: 48 }}>
                                 Not sure
                             </button>
                         </div>
                     </div>
+
+                    {error && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                            <button onClick={handleRetry} disabled={thinking} className="btn btn-secondary" style={{ padding: '8px 14px', fontSize: 13 }}>
+                                Retry
+                            </button>
+                        </div>
+                    )}
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
                         <span style={{ fontSize: 11, color: 'var(--muted)' }}>{input.length} / 1200</span>

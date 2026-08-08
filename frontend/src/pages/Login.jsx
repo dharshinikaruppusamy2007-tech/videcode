@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+import api from '../services/api';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -11,21 +10,49 @@ export default function Login() {
     const [candidates, setCandidates] = useState([]);
     const [selected, setSelected] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [signingIn, setSigningIn] = useState(false);
     const [error, setError] = useState('');
+    const requestedRef = useRef(false);
 
-    // If already logged in, skip to dashboard
+    // If already logged in (e.g., restored after refresh), go straight to dashboard
     useEffect(() => {
         if (candidate) { navigate('/dashboard'); return; }
-        fetch(`${API_BASE}/api/candidates`)
-            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-            .then(data => { setCandidates(Array.isArray(data) ? data : []); setLoading(false); })
-            .catch(e => { setError('Cannot reach backend: ' + e.message); setLoading(false); });
+    }, [candidate, navigate]);
+
+    useEffect(() => {
+        if (requestedRef.current) return;
+        requestedRef.current = true;
+
+        const load = async () => {
+            try {
+                const data = await api.getCandidates();
+                setCandidates(Array.isArray(data) ? data : []);
+        } catch {
+            setError('Unable to connect to the interview service. Please make sure the backend is running.');
+        } finally {
+            setLoading(false);
+        }
+        };
+        load();
     }, []);
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (!selected) { setError('Please select a candidate to continue.'); return; }
-        setCandidate(selected);
-        navigate('/dashboard');
+        setSigningIn(true); setError('');
+        try {
+            setCandidate(selected);
+            navigate('/dashboard');
+        } catch {
+            setError('Something went wrong while signing in. Please try again.');
+            setSigningIn(false);
+        }
+    };
+
+    const retryLoad = () => {
+        setLoading(true); setError('');
+        api.getCandidates()
+            .then(data => { setCandidates(Array.isArray(data) ? data : []); setLoading(false); })
+            .catch(() => { setError('Unable to connect to the interview service. Please make sure the backend is running.'); setLoading(false); });
     };
 
     const features = ['Personalized technical questions', 'Real-time AI evaluation', 'Detailed strengths & gaps feedback', 'Track your learning progress'];
@@ -91,12 +118,17 @@ export default function Login() {
                                 const isSel = selected?.member?.id === id;
                                 return (
                                     <div key={id} onClick={() => { setSelected(c); setError(''); }}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`Select candidate ${name}`}
+                                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(c); setError(''); } }}
                                         style={{
                                             padding: '14px 16px', border: `2px solid ${isSel ? 'var(--primary)' : 'var(--border)'}`,
                                             borderRadius: 10, cursor: 'pointer',
                                             background: isSel ? 'var(--primary-light)' : '#fff',
                                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                            transition: 'border-color 0.15s, background 0.15s'
+                                            transition: 'border-color 0.15s, background 0.15s',
+                                            outline: isSel ? 'none' : undefined,
                                         }}>
                                         <div>
                                             <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{name}</div>
@@ -115,8 +147,18 @@ export default function Login() {
                             })}
                         </div>
 
-                        <button onClick={handleLogin} disabled={!selected || loading} className="btn btn-primary btn-full" style={{ padding: '14px', fontSize: 15 }}>
-                            Sign in to Dashboard
+                        {!loading && candidates.length === 0 && (
+                            <button onClick={retryLoad} className="btn btn-secondary btn-full" style={{ marginBottom: 10 }}>
+                                Try Again
+                            </button>
+                        )}
+
+                        <button onClick={handleLogin} disabled={!selected || loading || signingIn} className="btn btn-primary btn-full" style={{ padding: '14px', fontSize: 15 }}>
+                            {signingIn ? (
+                                <>
+                                    <div className="spinner" style={{ width: 16, height: 16, borderWidth: 2, borderTopColor: '#fff' }} /> Signing in...
+                                </>
+                            ) : 'Sign in to Dashboard'}
                         </button>
                     </div>
                 </div>
