@@ -8,9 +8,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const interviewRouter = require('./routes/interview');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Routes
+app.use('/api/interview', interviewRouter);
 
 // Health-check endpoint
 app.get('/health', (req, res) => {
