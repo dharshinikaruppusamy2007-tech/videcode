@@ -56,15 +56,28 @@ ${retryInstruction ? `\nCRITICAL SYSTEM OVERRIDE: ${retryInstruction}` : ""}
  */
 async function getFeedback(transcript, candidateProfile) {
     const systemPrompt = `
-You are an expert technical grading assistant. Evaluate the candidate's performance.
+You are an expert technical grading assistant. Evaluate the candidate's performance based on the real interview transcript.
 
 Return a strictly valid JSON response in this exact format:
 {
     "summary": "Overall summary of the candidate's performance.",
     "strengths": ["string", "string"],
     "gaps": ["string", "string"],
-    "next": ["string", "string"]
+    "next": ["string", "string"],
+    "categories": {
+        "RAG & Embeddings": 8.6,
+        "Prompt Engineering": 7.2,
+        "Vector Databases": 8.1,
+        "System Design": 6.9,
+        "MCP & Advanced Topics": 5.8
+    }
 }
+
+Scoring rules for "categories":
+1. Each category must be a number between 0 and 10 reflecting how well the candidate answered questions on that topic in this transcript.
+2. Use the exact category labels above.
+3. Higher scores mean strong, accurate, confident answers. Lower scores mean weak, vague, or incorrect answers.
+4. If a topic was barely covered, give a moderate score (5-6) rather than inventing detail.
 `;
 
     let contextPrompt = `CANDIDATE INFO:\n${JSON.stringify(candidateProfile, null, 2)}\n\n`;

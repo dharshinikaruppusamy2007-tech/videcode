@@ -27,7 +27,7 @@ export function useVoice({ onTranscript }) {
 
     const startListening = useCallback(() => {
         if (!SpeechRecognitionAPI) return;
-        if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch (e) { } }
+        if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch { } }
 
         const recognition = new SpeechRecognitionAPI();
         recognition.continuous = false;
@@ -54,7 +54,7 @@ export function useVoice({ onTranscript }) {
 
     const stopListening = useCallback(() => {
         if (recognitionRef.current) {
-            try { recognitionRef.current.stop(); } catch (e) { }
+            try { recognitionRef.current.stop(); } catch { }
         }
         setVoiceStatus('idle');
     }, []);

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getInterviewTurn, getFeedback } = require('../services/interviewerLogic');
 const { buildInterviewPlan } = require('../services/interviewPlanBuilder');
+const { buildScoring } = require('../services/feedbackScoring');
 
 const sessions = new Map();
 
@@ -109,7 +110,17 @@ router.post('/', async (req, res) => {
                 }
             }
 
-            const feedback = await getFeedback(transcript, session.candidate.member);
+            const aiFeedback = await getFeedback(transcript, session.candidate.member);
+            const scoring = buildScoring(session.candidate, aiFeedback.categories);
+
+            const feedback = {
+                summary: aiFeedback.summary,
+                strengths: aiFeedback.strengths,
+                gaps: aiFeedback.gaps,
+                next: aiFeedback.next,
+                categories: scoring.categories,
+                overall: scoring.overall
+            };
 
             sessions.delete(sessionId);
 

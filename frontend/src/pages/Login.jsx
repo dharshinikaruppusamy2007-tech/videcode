@@ -27,11 +27,11 @@ export default function Login() {
             try {
                 const data = await api.getCandidates();
                 setCandidates(Array.isArray(data) ? data : []);
-        } catch {
-            setError('Unable to connect to the interview service. Please make sure the backend is running.');
-        } finally {
-            setLoading(false);
-        }
+            } catch {
+                setError('Unable to connect to the interview service. Please make sure the backend is running.');
+            } finally {
+                setLoading(false);
+            }
         };
         load();
     }, []);

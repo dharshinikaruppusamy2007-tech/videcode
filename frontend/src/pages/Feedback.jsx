@@ -1,9 +1,126 @@
 import { useNavigate } from 'react-router-dom';
-import { Award, CheckCircle, AlertTriangle, ArrowRight, PlayCircle, RotateCcw, FileQuestion } from 'lucide-react';
+import { Award, CheckCircle, AlertTriangle, ArrowRight, PlayCircle, FileQuestion, Download, Lightbulb } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useApp } from '../context/AppContext';
 
 const asList = (v) => !v ? [] : Array.isArray(v) ? v : typeof v === 'string' ? [v] : [];
+
+const clampScore = (s) => {
+    const n = Number(s);
+    return Number.isFinite(n) ? Math.max(0, Math.min(10, n)) : 0;
+};
+
+const scoreLabel = (s) => {
+    if (s >= 8.5) return 'Excellent Performance';
+    if (s >= 7) return 'Strong Performance';
+    if (s >= 5) return 'Good Performance';
+    return 'Needs Improvement';
+};
+
+const scoreColor = (s) => {
+    if (s >= 8.5) return '#10B981';
+    if (s >= 7) return '#4F46E5';
+    if (s >= 5) return '#F59E0B';
+    return '#EF4444';
+};
+
+function ScoreRing({ score, color }) {
+    const size = 168;
+    const stroke = 13;
+    const r = (size - stroke) / 2 - 5;
+    const c = 2 * Math.PI * r;
+    const pct = clampScore(score) / 10;
+
+    return (
+        <div className="fd-ring" style={{ position: 'relative', width: size, height: size }}>
+            <svg width={size} height={size} role="img" aria-label={`Overall score ${score.toFixed(1)} out of 10`}>
+                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EEF2F7" strokeWidth={stroke} />
+                <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={r}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={stroke}
+                    strokeLinecap="round"
+                    strokeDasharray={`${c * pct} ${c}`}
+                    transform={`rotate(-90 ${size / 2} ${size / 2})`}
+                />
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ fontSize: 44, fontWeight: 700, lineHeight: 1, color: 'var(--text)' }}>{score.toFixed(1)}</div>
+                <div style={{ fontSize: 14, color: 'var(--muted)', marginTop: 4 }}>out of 10</div>
+            </div>
+        </div>
+    );
+}
+
+function CategoryBar({ label, score }) {
+    const value = clampScore(score);
+    const color = scoreColor(value);
+    const pct = Math.round((value / 10) * 100);
+
+    return (
+        <div className="fd-bar">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{label}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color, minWidth: 38, textAlign: 'right' }}>{value.toFixed(1)}</span>
+            </div>
+            <div className="fd-track" role="progressbar" aria-valuenow={Math.round(value)} aria-valuemin={0} aria-valuemax={10} aria-label={label}>
+                <div className="fd-fill" style={{ width: `${pct}%`, background: color }} />
+            </div>
+        </div>
+    );
+}
+
+function buildReport(candidate, feedback) {
+    const asList2 = (v) => !v ? [] : Array.isArray(v) ? v : typeof v === 'string' ? [v] : [];
+    const lines = [];
+    lines.push('AI INTERVIEW REPORT');
+    lines.push('===================');
+    lines.push(`Candidate: ${candidate?.member?.name || 'Unknown'} (${candidate?.member?.id || ''})`);
+    lines.push(`Date: ${new Date().toLocaleDateString()}`);
+    if (typeof feedback.overall === 'number') {
+        lines.push(`Overall Score: ${feedback.overall.toFixed(1)} / 10`);
+    }
+    if (Array.isArray(feedback.categories) && feedback.categories.length > 0) {
+        lines.push('');
+        lines.push('PERFORMANCE BREAKDOWN:');
+        feedback.categories.forEach((category) => lines.push(`  - ${category.label}: ${Number(category.score).toFixed(1)} / 10`));
+    }
+    if (feedback.summary) {
+        lines.push('');
+        lines.push('SUMMARY:');
+        lines.push(feedback.summary);
+    }
+    if (asList2(feedback.strengths).length > 0) {
+        lines.push('');
+        lines.push('STRENGTHS:');
+        asList2(feedback.strengths).forEach((item) => lines.push(`  - ${item}`));
+    }
+    if (asList2(feedback.gaps).length > 0) {
+        lines.push('');
+        lines.push('AREAS TO IMPROVE:');
+        asList2(feedback.gaps).forEach((item) => lines.push(`  - ${item}`));
+    }
+    if (asList2(feedback.next).length > 0) {
+        lines.push('');
+        lines.push('RECOMMENDATIONS:');
+        asList2(feedback.next).forEach((item) => lines.push(`  - ${item}`));
+    }
+    lines.push('');
+    lines.push('Keep learning and building! You are on the right track.');
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `interview-report-${(candidate?.member?.name || 'candidate').replace(/\s+/g, '-').toLowerCase()}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
 
 export default function Feedback() {
     const navigate = useNavigate();
@@ -14,23 +131,16 @@ export default function Feedback() {
             <div className="app-layout">
                 <Sidebar active="feedback" />
                 <main className="main-content" style={{ background: 'var(--bg)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', flex: 1 }}>
-                        <div style={{ textAlign: 'center', maxWidth: 420, width: '100%' }}>
-                            <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#EEF2FF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
+                    <div className="fd-container animate-in">
+                        <div className="fd-empty">
+                            <div className="fd-empty-icon">
                                 <FileQuestion size={34} color="var(--primary)" />
                             </div>
-                            <h1 style={{ fontSize: 'clamp(20px,4vw,26px)', margin: '0 0 8px' }}>Interview not completed yet</h1>
-                            <p style={{ color: 'var(--muted)', fontSize: 14, margin: '0 0 24px', lineHeight: 1.6 }}>
-                                Complete your interview to receive AI-generated feedback.
-                            </p>
-                            <button onClick={() => navigate('/dashboard')} className="btn btn-primary" style={{ minWidth: 180 }}>
+                            <h1>Interview not completed yet</h1>
+                            <p>Complete your interview to receive AI-generated feedback.</p>
+                            <button onClick={() => navigate('/dashboard')} className="btn btn-primary" style={{ minWidth: 200 }}>
                                 <PlayCircle size={17} /> Start Interview
                             </button>
-                            <div style={{ marginTop: 14 }}>
-                                <button onClick={() => navigate('/dashboard')} className="btn btn-secondary" style={{ padding: '8px 14px', fontSize: 13 }}>
-                                    Back to Dashboard
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </main>
@@ -42,23 +152,23 @@ export default function Feedback() {
     const gaps = asList(feedback.gaps);
     const next = asList(feedback.next);
     const summary = feedback.summary || feedback.overall_summary || '';
+    const categories = Array.isArray(feedback.categories) ? feedback.categories.filter((c) => c && c.label) : [];
+    const overall = typeof feedback.overall === 'number' ? clampScore(feedback.overall) : null;
+    const hasRealContent = summary || strengths.length > 0 || gaps.length > 0 || next.length > 0 || categories.length > 0 || overall !== null;
 
-    // Backend feedback object exists but contains no usable data — do not invent it.
-    if (!summary && strengths.length === 0 && gaps.length === 0 && next.length === 0) {
+    if (!hasRealContent) {
         return (
             <div className="app-layout">
                 <Sidebar active="feedback" />
                 <main className="main-content" style={{ background: 'var(--bg)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', flex: 1 }}>
-                        <div style={{ textAlign: 'center', maxWidth: 420, width: '100%' }}>
-                            <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#EEF2FF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
+                    <div className="fd-container animate-in">
+                        <div className="fd-empty">
+                            <div className="fd-empty-icon">
                                 <Award size={34} color="var(--primary)" />
                             </div>
-                            <h1 style={{ fontSize: 'clamp(20px,4vw,26px)', margin: '0 0 8px' }}>Feedback is not available yet.</h1>
-                            <p style={{ color: 'var(--muted)', fontSize: 14, margin: '0 0 24px', lineHeight: 1.6 }}>
-                                Complete your interview to receive AI-generated feedback.
-                            </p>
-                            <button onClick={() => navigate('/dashboard')} className="btn btn-primary" style={{ minWidth: 180 }}>
+                            <h1>Feedback is not available yet.</h1>
+                            <p>Complete your interview to receive AI-generated feedback.</p>
+                            <button onClick={() => navigate('/dashboard')} className="btn btn-primary" style={{ minWidth: 200 }}>
                                 <PlayCircle size={17} /> Start Interview
                             </button>
                         </div>
@@ -68,56 +178,77 @@ export default function Feedback() {
         );
     }
 
+    const name = candidate?.member?.name || 'Candidate';
+    const ringColor = overall !== null ? scoreColor(overall) : 'var(--primary)';
+
     return (
         <div className="app-layout">
             <Sidebar active="feedback" />
 
             <main className="main-content" style={{ background: 'var(--bg)' }}>
-                <style>{`
-                    .fb { padding:32px 40px; max-width:720px; width:100%; margin:0 auto; }
-                    .fb-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-                    .fb-li { display:flex; gap:8px; }
-                    @media(max-width:768px){
-                        .fb { padding:20px 16px 84px; }
-                        .fb-grid { grid-template-columns:1fr; }
-                    }
-                `}</style>
-
-                <div className="fb animate-in">
-                    {/* Header */}
-                    <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                        <div style={{ width: 68, height: 68, borderRadius: '50%', background: 'linear-gradient(135deg,#10B981,#059669)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', marginBottom: 16, boxShadow: '0 6px 20px rgba(16,185,129,0.35)' }}>
-                            <Award size={34} />
+                <div className="fd-container animate-in">
+                    {/* 1. Header */}
+                    <div className="fd-header">
+                        <div>
+                            <h1>Interview Completed!</h1>
+                            <p>Great job, {name}! Here&apos;s your performance summary.</p>
                         </div>
-                        <h1 style={{ fontSize: 'clamp(22px,3vw,28px)', margin: '0 0 6px' }}>Feedback</h1>
-                        <p style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#059669', fontSize: 14, fontWeight: 600, background: '#D1FAE5', padding: '4px 12px', borderRadius: 999, margin: '0 0 10px' }}>
-                            <CheckCircle size={15} /> Interview Complete
-                        </p>
-                        <p style={{ color: 'var(--muted)', fontSize: 14, margin: 0 }}>
-                            {candidate?.member?.name} · ID: {candidate?.member?.id}
-                        </p>
+                        <button className="btn btn-primary" onClick={() => buildReport(candidate, feedback)}>
+                            <Download size={16} /> Download Report
+                        </button>
                     </div>
 
-                    {/* Overall Summary (real backend data) */}
+                    {/* 2 + 3. Score & breakdown */}
+                    <div className="fd-grid-top">
+                        <div className="card fd-score-card">
+                            <h3>Overall Score</h3>
+                            {overall !== null ? (
+                                <>
+                                    <ScoreRing score={overall} color={ringColor} />
+                                    <span className="fd-label" style={{ background: `${ringColor}1A`, color: ringColor }}>
+                                        {scoreLabel(overall)}
+                                    </span>
+                                </>
+                            ) : (
+                                <p style={{ color: 'var(--muted)', fontSize: 14, margin: 0 }}>Score not available.</p>
+                            )}
+                        </div>
+
+                        <div className="card fd-breakdown-card">
+                            <h3>Performance Breakdown</h3>
+                            {categories.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                                    {categories.map((category, i) => (
+                                        <CategoryBar key={`${category.label}-${i}`} label={category.label} score={category.score} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p style={{ color: 'var(--muted)', fontSize: 14, margin: 0 }}>Breakdown not available.</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Real overall summary */}
                     {summary && (
-                        <div className="card" style={{ marginBottom: 20, borderLeft: '4px solid var(--primary)' }}>
-                            <h3 style={{ fontSize: 15, marginBottom: 10 }}>Overall</h3>
-                            <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text)', margin: 0 }}>{summary}</p>
+                        <div className="card fd-summary-card">
+                            <h3>Overall</h3>
+                            <p>{summary}</p>
                         </div>
                     )}
 
-                    {/* Strengths + Gaps */}
+                    {/* 4 + 5. Strengths & Areas to improve */}
                     {(strengths.length > 0 || gaps.length > 0) && (
-                        <div className="fb-grid" style={{ marginBottom: 20 }}>
+                        <div className="fd-grid-col">
                             {strengths.length > 0 && (
-                                <div className="card" style={{ borderTop: '3px solid #10B981' }}>
-                                    <h3 style={{ fontSize: 15, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, color: '#065F46' }}>
-                                        <CheckCircle size={17} color="#10B981" /> Strengths
+                                <div className="card fd-col-card">
+                                    <h3 style={{ color: '#065F46' }}>
+                                        <CheckCircle size={18} color="#10B981" /> Strengths
                                     </h3>
-                                    <ul style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                        {strengths.map((s, i) => (
-                                            <li key={i} className="fb-li" style={{ fontSize: 14 }}>
-                                                <span style={{ color: '#10B981', flexShrink: 0 }}>✓</span> {s}
+                                    <ul>
+                                        {strengths.map((item, i) => (
+                                            <li key={i} className="fd-li">
+                                                <CheckCircle size={18} color="#10B981" className="fd-li-icon" />
+                                                <span>{item}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -125,14 +256,15 @@ export default function Feedback() {
                             )}
 
                             {gaps.length > 0 && (
-                                <div className="card" style={{ borderTop: '3px solid #F59E0B' }}>
-                                    <h3 style={{ fontSize: 15, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, color: '#92400E' }}>
-                                        <AlertTriangle size={17} color="#F59E0B" /> Areas to Improve
+                                <div className="card fd-col-card">
+                                    <h3 style={{ color: '#92400E' }}>
+                                        <AlertTriangle size={18} color="#F59E0B" /> Areas to Improve
                                     </h3>
-                                    <ul style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                        {gaps.map((g, i) => (
-                                            <li key={i} className="fb-li" style={{ fontSize: 14 }}>
-                                                <span style={{ color: '#F59E0B', flexShrink: 0 }}>!</span> {g}
+                                    <ul>
+                                        {gaps.map((item, i) => (
+                                            <li key={i} className="fd-li">
+                                                <AlertTriangle size={18} color="#F59E0B" className="fd-li-icon" />
+                                                <span>{item}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -141,26 +273,26 @@ export default function Feedback() {
                         </div>
                     )}
 
-                    {/* Next Steps */}
+                    {/* 6. Recommendations */}
                     {next.length > 0 && (
-                        <div className="card" style={{ borderTop: '3px solid var(--primary)', marginBottom: 28 }}>
-                            <h3 style={{ fontSize: 15, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--primary)' }}>
-                                <ArrowRight size={17} color="var(--primary)" /> Next Steps
+                        <div className="card fd-rec-card">
+                            <h3 style={{ color: 'var(--primary)' }}>
+                                <Lightbulb size={18} color="var(--primary)" /> Recommendations
                             </h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                {next.map((n, i) => (
-                                    <div key={i} style={{ background: 'var(--primary-light)', padding: '10px 14px', borderRadius: 8, fontSize: 14, color: '#1e1b4b' }}>
-                                        {n}
-                                    </div>
+                            <ul>
+                                {next.map((item, i) => (
+                                    <li key={i} className="fd-rec-item">
+                                        <ArrowRight size={16} color="var(--primary)" className="fd-li-icon" />
+                                        <span>{item}</span>
+                                    </li>
                                 ))}
-                            </div>
+                            </ul>
                         </div>
                     )}
 
-                    <div style={{ textAlign: 'center' }}>
-                        <button onClick={() => navigate('/dashboard')} className="btn btn-secondary" style={{ gap: 8 }}>
-                            <RotateCcw size={15} /> Back to Dashboard
-                        </button>
+                    {/* 7. Footer message */}
+                    <div className="fd-footer">
+                        Keep learning and building! You&apos;re on the right track 🚀
                     </div>
                 </div>
             </main>
