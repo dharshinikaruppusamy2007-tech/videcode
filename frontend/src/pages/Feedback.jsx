@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Award, CheckCircle, AlertTriangle, ArrowRight, PlayCircle, FileQuestion, Download, Lightbulb } from 'lucide-react';
+import { Award, CheckCircle, AlertTriangle, ArrowRight, PlayCircle, FileQuestion, Download, Lightbulb, ShieldAlert } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useApp } from '../context/AppContext';
 
@@ -124,7 +124,55 @@ function buildReport(candidate, feedback) {
 
 export default function Feedback() {
     const navigate = useNavigate();
-    const { feedback, candidate } = useApp();
+    const { feedback, candidate, endReason, messages } = useApp();
+
+    if (endReason === 'suspicious-activity') {
+        const transcript = Array.isArray(messages) ? messages : [];
+        return (
+            <div className="app-layout">
+                <Sidebar active="feedback" />
+                <main className="main-content" style={{ background: 'var(--bg)' }}>
+                    <div className="fd-container animate-in">
+                        <div className="fd-terminate">
+                            <div className="fd-terminate-icon">
+                                <ShieldAlert size={36} color="#B91C1C" />
+                            </div>
+                            <h1>Interview ended due to suspicious activity</h1>
+                            <p>
+                                The interview was automatically stopped after 3 warnings (tab switching, leaving the
+                                window, or inactivity). Your answers below have been saved.
+                            </p>
+                            <button onClick={() => navigate('/dashboard')} className="btn btn-primary" style={{ minWidth: 200 }}>
+                                <PlayCircle size={17} /> Return to Dashboard
+                            </button>
+                        </div>
+
+                        {transcript.length > 0 && (
+                            <div className="card" style={{ marginTop: 20, maxHeight: 380, overflowY: 'auto' }}>
+                                <h3 style={{ fontSize: 15, margin: '0 0 14px' }}>Saved Conversation</h3>
+                                {transcript.map((msg, i) => (
+                                    <div
+                                        key={i}
+                                        style={{
+                                            marginBottom: 10,
+                                            padding: '10px 14px',
+                                            borderRadius: 10,
+                                            background: msg.role === 'user' ? 'var(--primary-light)' : '#F1F5F9',
+                                        }}
+                                    >
+                                        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 4 }}>
+                                            {msg.role === 'user' ? 'You' : 'AI Interviewer'}
+                                        </div>
+                                        <div style={{ fontSize: 14, lineHeight: 1.5 }}>{msg.text}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     if (!feedback) {
         return (

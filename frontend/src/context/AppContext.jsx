@@ -15,6 +15,7 @@ function loadPersistedState() {
             candidate: state.candidate || null,
             sessionId: state.sessionId || null,
             feedback: state.feedback || null,
+            endReason: state.endReason || null,
             interviewDone: !!state.interviewDone,
             messages: Array.isArray(state.messages) ? state.messages : [],
         };
@@ -29,13 +30,14 @@ export function AppProvider({ children }) {
     const [candidate, setCandidate] = useState(persisted.candidate);
     const [sessionId, setSessionId] = useState(persisted.sessionId);
     const [feedback, setFeedback] = useState(persisted.feedback);
+    const [endReason, setEndReason] = useState(persisted.endReason);
     const [interviewDone, setInterviewDone] = useState(persisted.interviewDone);
     const [messages, setMessages] = useState(persisted.messages);
 
     // Persist safe state whenever it changes
     useEffect(() => {
         try {
-            const isEmpty = !candidate && !sessionId && !feedback && !interviewDone && messages.length === 0;
+            const isEmpty = !candidate && !sessionId && !feedback && !endReason && !interviewDone && messages.length === 0;
             if (isEmpty) {
                 localStorage.removeItem(STORAGE_KEY);
             } else {
@@ -43,6 +45,7 @@ export function AppProvider({ children }) {
                     candidate,
                     sessionId,
                     feedback,
+                    endReason,
                     interviewDone,
                     messages,
                 }));
@@ -50,7 +53,7 @@ export function AppProvider({ children }) {
         } catch (e) {
             console.warn('Could not persist application state:', e);
         }
-    }, [candidate, sessionId, feedback, interviewDone, messages]);
+    }, [candidate, sessionId, feedback, endReason, interviewDone, messages]);
 
     // Reset everything: context state + persisted state.
     // Safe to call from Logout anywhere.
@@ -58,6 +61,7 @@ export function AppProvider({ children }) {
         setCandidate(null);
         setSessionId(null);
         setFeedback(null);
+        setEndReason(null);
         setInterviewDone(false);
         setMessages([]);
         try {
@@ -71,6 +75,7 @@ export function AppProvider({ children }) {
     const beginInterview = useCallback((sid, firstReply) => {
         setMessages([]);
         setFeedback(null);
+        setEndReason(null);
         setInterviewDone(false);
         setSessionId(sid);
         if (firstReply) setMessages([{ role: 'ai', text: firstReply }]);
@@ -81,6 +86,7 @@ export function AppProvider({ children }) {
             candidate, setCandidate,
             sessionId, setSessionId,
             feedback, setFeedback,
+            endReason, setEndReason,
             interviewDone, setInterviewDone,
             messages, setMessages,
             logout,
