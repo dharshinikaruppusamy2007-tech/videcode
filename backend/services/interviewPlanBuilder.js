@@ -25,7 +25,10 @@ function loadDataFile(filename) {
  * output: 8-10 items spanning at least 4 distinct days.
  */
 function buildInterviewPlan(candidate, curriculumOverride = null) {
-    const curriculum = curriculumOverride || loadDataFile('curriculum.json');
+    let curriculum = curriculumOverride || loadDataFile('curriculum.json');
+    if (curriculum && !Array.isArray(curriculum) && curriculum.days) {
+        curriculum = curriculum.days;
+    }
     if (!candidate || !candidate.missions || !curriculum) {
         return [];
     }

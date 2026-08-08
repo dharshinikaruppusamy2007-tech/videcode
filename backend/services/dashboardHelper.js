@@ -4,7 +4,10 @@ const { loadDataFile } = require('./interviewPlanBuilder');
  * Calculates dashboard statistics based on candidate missions and curriculum.
  */
 function calculateDashboardStats(candidate, curriculumOverride = null) {
-    const curriculum = curriculumOverride || loadDataFile('curriculum.json');
+    let curriculum = curriculumOverride || loadDataFile('curriculum.json');
+    if (curriculum && !Array.isArray(curriculum) && curriculum.days) {
+        curriculum = curriculum.days;
+    }
     if (!candidate || !candidate.missions || !curriculum) {
         return null;
     }
