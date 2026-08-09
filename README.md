@@ -126,10 +126,12 @@ npm install
 ```
 GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
 PORT=3001
+FRONTEND_URL=http://localhost:5173
 ```
 
 - `GEMINI_API_KEY` — your Google Gemini API key. **Required.**
 - `PORT` — backend port (defaults to `3000`; the app uses `3001`).
+- `FRONTEND_URL` — allowed frontend origin for CORS. Set to the real deployed frontend URL in production.
 
 ### Frontend — `frontend/.env`
 
@@ -299,8 +301,8 @@ kill <PID>
 
 ### CORS problems
 
-- The backend enables `cors()` for all origins in development.
-- If you host the frontend and backend on different domains in production, ensure the backend's CORS policy allows your frontend origin.
+- In development the backend allows the origin `http://localhost:5173` (or the origin in `FRONTEND_URL`).
+- If you host the frontend and backend on different domains in production, set `FRONTEND_URL` in `backend/.env` to the real deployed frontend URL. The backend rejects requests from any other origin.
 
 ### Gemini errors / HTTP 503 ("AI service is temporarily unavailable")
 

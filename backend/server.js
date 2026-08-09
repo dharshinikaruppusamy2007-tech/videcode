@@ -8,11 +8,26 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Allowlist of allowed frontend origins (no unrestricted "*").
+// In production, set FRONTEND_URL to the real deployed frontend URL.
+const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173'];
+
 const interviewRouter = require('./routes/interview');
 const candidatesRouter = require('./routes/candidates');
 
 // Middleware
-app.use(cors());
+app.use(
+    cors({
+        origin(origin, callback) {
+            // Allow non-browser requests (curl, health checks) that send no Origin header.
+            if (!origin || allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error('Not allowed by CORS'));
+        },
+        methods: ['GET', 'POST', 'OPTIONS'],
+    })
+);
 app.use(express.json());
 
 // Routes
