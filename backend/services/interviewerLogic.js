@@ -1,22 +1,44 @@
 const { generateGeminiResponse } = require("./geminiService");
 
 /**
- * Generate the next question from Gemini given the current context
+ * Generate the next question from Gemini given the current context.
+ * The interviewer evaluates the candidate's latest answer, classifies their
+ * level (beginner/intermediate/advanced) and adapts the next question.
  */
 async function getInterviewTurn(candidate, interviewPlan, conversationHistory, retryInstruction = "") {
-    const systemPrompt = `
-You are an expert technical AI Interviewer. You are conducting an evaluation interview for ${candidate?.member?.name || 'the candidate'}.
+    const history = Array.isArray(conversationHistory) ? conversationHistory : [];
+    const hasCandidateAnswer = history.length > 0 && history[history.length - 1].role === 'candidate';
 
-INSTRUCTIONS:
-1. Ask ONE clear, technical question at a time based on the CANDIDATE INTERVIEW PLAN. 
-2. Use candidate signals (gap, weak_signal, strong_signal). Probe deeper into 'gap' and 'weak_signal' topics.
-3. If an answer was PARTIAL or WEAK, ask a deeper technical follow-up on the SAME topic.
-4. Only move to a new topic from the plan when the current topic has been satisfactorily answered or heavily probed.
-5. Identify the internal integer "day" (curriculum day) your generated question corresponds to.
-6. If the interview is naturally reaching a close because the candidate answered everything well, set "done": true.
-7. Return a strictly valid JSON response exactly like this:
+    const systemPrompt = `
+You are an expert technical AI Interviewer conducting an evaluation interview for ${candidate?.member?.name || 'the candidate'}.
+
+${hasCandidateAnswer
+    ? `TASK — EVALUATE THE CANDIDATE'S LATEST ANSWER AND CONTINUE:
+1. Analyze the candidate's answer carefully.
+2. Evaluate it based on:
+   - Correctness
+   - Clarity
+   - Depth of explanation
+3. Classify the candidate into one level:
+   - "beginner"
+   - "intermediate"
+   - "advanced"
+4. Based on the level, generate the NEXT interview question:
+   - If beginner → ask an easy/basic question
+   - If intermediate → ask a moderate question
+   - If advanced → ask a difficult/deep question
+5. Keep the interview natural and professional.`
+    : `TASK — OPEN THE INTERVIEW:
+Greet the candidate briefly by name and ask exactly ONE opening question from the highest-priority item in the CANDIDATE INTERVIEW PLAN. Set "level" to "beginner" for this first question.`}
+
+6. Ground every question in the CANDIDATE INTERVIEW PLAN. Probe deeper into 'gap' and 'weak_signal' topics, and use the curriculum "day" objectives/tools to phrase technical questions.
+7. Ask exactly ONE question per turn.
+8. If the interview is naturally reaching a close because the candidate has answered well across the required topics, set "done": true. Otherwise set "done": false.
+9. Identify the internal integer "day" (curriculum day) your generated question corresponds to.
+10. Return a strictly valid JSON response exactly like this:
 {
-  "reply": "Your conversational text/question.",
+  "level": "beginner | intermediate | advanced",
+  "nextQuestion": "Your conversational question text.",
   "done": false,
   "day": 12
 }
@@ -27,13 +49,13 @@ ${retryInstruction ? `\nCRITICAL SYSTEM OVERRIDE: ${retryInstruction}` : ""}
     let contextPrompt = `CANDIDATE INTERVIEW PLAN:\n${JSON.stringify(interviewPlan, null, 2)}\n\n`;
     contextPrompt += `CONVERSATION HISTORY:\n`;
 
-    if (!conversationHistory || conversationHistory.length === 0) {
-        contextPrompt += "No history yet. Start the interview by greeting the candidate by name briefly, and asking exactly ONE question from the highest-priority plan item.";
+    if (history.length === 0) {
+        contextPrompt += "No history yet. Open the interview now.";
     } else {
-        conversationHistory.forEach((msg) => {
+        history.forEach((msg) => {
             contextPrompt += `${msg.role === 'interviewer' ? 'Interviewer' : 'Candidate'}: ${msg.content}\n`;
         });
-        contextPrompt += `\nGenerate the next immediate turn for the interviewer in JSON.`;
+        contextPrompt += `\nEvaluate the candidate's latest answer above, classify their level, and generate the next interviewer question in JSON.`;
     }
 
     try {
@@ -45,7 +67,15 @@ ${retryInstruction ? `\nCRITICAL SYSTEM OVERRIDE: ${retryInstruction}` : ""}
         if (cleanJson.startsWith('```')) cleanJson = cleanJson.replace(/```/g, '');
         if (cleanJson.endsWith('```')) cleanJson = cleanJson.replace(/```/g, '');
 
-        return JSON.parse(cleanJson.trim());
+        const data = JSON.parse(cleanJson.trim());
+
+        // Map the evaluator output onto the app's turn contract
+        return {
+            reply: data.nextQuestion || data.reply,
+            done: !!data.done,
+            day: data.day ?? null,
+            level: data.level || null,
+        };
     } catch (error) {
         throw new Error("Interview turn generation failed: " + error.message);
     }

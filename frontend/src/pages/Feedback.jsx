@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Award, CheckCircle, AlertTriangle, ArrowRight, PlayCircle, FileQuestion, Download, Lightbulb, ShieldAlert } from 'lucide-react';
+import { Award, CheckCircle, AlertTriangle, ArrowRight, PlayCircle, FileQuestion, Download, Lightbulb, ShieldAlert, RotateCcw } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { useApp } from '../context/AppContext';
+import api from '../services/api';
+import { v4 as uuidv4 } from 'uuid';
 
 const asList = (v) => !v ? [] : Array.isArray(v) ? v : typeof v === 'string' ? [v] : [];
 
@@ -124,7 +127,25 @@ function buildReport(candidate, feedback) {
 
 export default function Feedback() {
     const navigate = useNavigate();
-    const { feedback, candidate, endReason, messages } = useApp();
+    const { feedback, candidate, endReason, messages, beginInterview, setInterviewStatus } = useApp();
+    const [restarting, setRestarting] = useState(false);
+    const [restartError, setRestartError] = useState('');
+
+    const handleRestart = async () => {
+        if (!candidate || restarting) return;
+        setRestarting(true); setRestartError('');
+        setInterviewStatus('not_started');
+        try {
+            const sid = uuidv4();
+            const data = await api.startInterview(sid, candidate);
+            beginInterview(sid, data.reply || '');
+            navigate('/interview');
+        } catch (e) {
+            setRestartError('Failed to restart interview: ' + e.message);
+            setRestarting(false);
+            setInterviewStatus('completed');
+        }
+    };
 
     if (endReason === 'suspicious-activity') {
         const transcript = Array.isArray(messages) ? messages : [];
@@ -142,9 +163,15 @@ export default function Feedback() {
                                 The interview was automatically stopped after 3 warnings (tab switching, leaving the
                                 window, or inactivity). Your answers below have been saved.
                             </p>
-                            <button onClick={() => navigate('/dashboard')} className="btn btn-primary" style={{ minWidth: 200 }}>
-                                <PlayCircle size={17} /> Return to Dashboard
-                            </button>
+                            {restartError && <div className="banner-error" style={{ marginBottom: 12 }}>{restartError}</div>}
+                            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                                <button onClick={handleRestart} disabled={restarting} className="btn btn-secondary" style={{ minWidth: 200 }}>
+                                    <RotateCcw size={17} /> {restarting ? 'Restarting...' : 'Restart Interview'}
+                                </button>
+                                <button onClick={() => navigate('/dashboard')} className="btn btn-primary" style={{ minWidth: 200 }}>
+                                    <PlayCircle size={17} /> Return to Dashboard
+                                </button>
+                            </div>
                         </div>
 
                         {transcript.length > 0 && (
@@ -241,10 +268,17 @@ export default function Feedback() {
                             <h1>Interview Completed!</h1>
                             <p>Great job, {name}! Here&apos;s your performance summary.</p>
                         </div>
-                        <button className="btn btn-primary" onClick={() => buildReport(candidate, feedback)}>
-                            <Download size={16} /> Download Report
-                        </button>
+                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                            <button className="btn btn-secondary" onClick={handleRestart} disabled={restarting}>
+                                <RotateCcw size={16} /> {restarting ? 'Restarting...' : 'Restart Interview'}
+                            </button>
+                            <button className="btn btn-primary" onClick={() => buildReport(candidate, feedback)}>
+                                <Download size={16} /> Download Report
+                            </button>
+                        </div>
                     </div>
+
+                    {restartError && <div className="banner-error" style={{ marginBottom: 16 }}>{restartError}</div>}
 
                     {/* 2 + 3. Score & breakdown */}
                     <div className="fd-grid-top">

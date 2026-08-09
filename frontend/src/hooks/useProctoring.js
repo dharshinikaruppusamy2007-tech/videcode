@@ -112,7 +112,8 @@ export function useProctoring({ onFail }) {
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
         faceIntervalRef.current = setInterval(() => {
-            if (!streamRef.current || video.readyState < 2) return;
+            const video = videoRef.current;
+            if (!streamRef.current || !video || video.readyState < 2) return;
             try {
                 ctx.drawImage(video, 0, 0, FACE_FRAME_W, FACE_FRAME_H);
                 const ratio = analyzeFacePresence(ctx.getImageData(0, 0, FACE_FRAME_W, FACE_FRAME_H).data, FACE_FRAME_W, FACE_FRAME_H);
@@ -170,8 +171,10 @@ export function useProctoring({ onFail }) {
         startedAtRef.current = Date.now();
         lastActivityRef.current = Date.now();
         startedRef.current = true;
-        startWebcam();
-    }, [startWebcam]);
+        // The camera is opt-in via the Camera button. Proctoring (tab switch,
+        // window blur and inactivity checks) still runs without it; face
+        // detection only activates once the user enables the camera.
+    }, []);
 
     const refreshActivity = useCallback(() => {
         lastActivityRef.current = Date.now();

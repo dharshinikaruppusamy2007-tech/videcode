@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, Send, Volume2, VolumeX, User, RotateCcw, ShieldAlert, Video, VideoOff, Sparkles } from 'lucide-react';
+import { Mic, MicOff, Send, Volume2, VolumeX, User, RotateCcw, ShieldAlert, Video, VideoOff, Sparkles, X } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import AIInterviewerAvatar from '../components/AIInterviewerAvatar';
 import { useApp } from '../context/AppContext';
@@ -13,13 +13,14 @@ const initials = (name = '') =>
 
 export default function LiveInterview() {
     const navigate = useNavigate();
-    const { candidate, sessionId, endReason, setEndReason, setFeedback, setInterviewDone, messages, setMessages } = useApp();
+    const { candidate, sessionId, endReason, setEndReason, setFeedback, setInterviewDone, setInterviewStatus, interviewStatus, messages, setMessages } = useApp();
     const [input, setInput] = useState('');
     const [thinking, setThinking] = useState(false);
     const [error, setError] = useState('');
     const [recovery, setRecovery] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(true);
     const [proctorToast, setProctorToast] = useState(null);
+    const [cameraOpen, setCameraOpen] = useState(false);
     const chatEndRef = useRef(null);
     const spokenRef = useRef(false);
     const lastTextRef = useRef('');
@@ -27,7 +28,7 @@ export default function LiveInterview() {
 
     // Proctoring hook (tab switch, inactivity, webcam face detection)
     const {
-        warnings, webcamState, webcamError, faceVisible, lastWarning,
+        warnings, webcamState, faceVisible, lastWarning,
         videoRef, canvasRef,
         startProctoring, stopProctoring, startWebcam, stopWebcam, refreshActivity
     } = useProctoring({ onFail: () => { failRef.current?.(); } });
@@ -41,10 +42,24 @@ export default function LiveInterview() {
         stopProctoring();
         cleanup();
         setEndReason('suspicious-activity');
+        setInterviewStatus('completed');
         navigate('/feedback', { replace: true });
-    }, [stopProctoring, cleanup, setEndReason, navigate]);
+    }, [stopProctoring, cleanup, setEndReason, setInterviewStatus, navigate]);
 
     useEffect(() => { failRef.current = handleProctorFail; }, [handleProctorFail]);
+
+    // Camera preview — opt-in via the header Camera button
+    const openCamera = useCallback(() => {
+        setCameraOpen(true);
+        if (webcamState === 'off' || webcamState === 'denied' || webcamState === 'unsupported') startWebcam();
+    }, [webcamState, startWebcam]);
+
+    const closeCamera = useCallback(() => setCameraOpen(false), []);
+
+    const turnOffCamera = useCallback(() => {
+        stopWebcam();
+        setCameraOpen(false);
+    }, [stopWebcam]);
 
     // Auto-scroll to bottom
     useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, thinking]);
@@ -59,6 +74,11 @@ export default function LiveInterview() {
     useEffect(() => {
         if (endReason) navigate('/feedback', { replace: true });
     }, [endReason, navigate]);
+
+    // A completed interview must never render the interview UI again — go to feedback
+    useEffect(() => {
+        if (interviewStatus === 'completed') navigate('/feedback', { replace: true });
+    }, [interviewStatus, navigate]);
 
     // Show toast on each proctoring warning
     useEffect(() => {
@@ -103,6 +123,7 @@ export default function LiveInterview() {
                 cleanup();
                 setFeedback(data.feedback ?? { summary: 'Interview complete', strengths: [], gaps: [], next: [] });
                 setInterviewDone(true);
+                setInterviewStatus('completed');
                 navigate('/feedback');
             } else {
                 setMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
@@ -120,7 +141,7 @@ export default function LiveInterview() {
                 setInput(lastTextRef.current);
             }
         }
-    }, [sessionId, voiceEnabled, isSynthSupported, speak, stopSpeaking, cleanup, setFeedback, setInterviewDone, navigate, setMessages, thinking, refreshActivity, stopProctoring]);
+    }, [sessionId, voiceEnabled, isSynthSupported, speak, stopSpeaking, cleanup, setFeedback, setInterviewDone, setInterviewStatus, navigate, setMessages, thinking, refreshActivity, stopProctoring]);
 
     const handleSubmit = () => {
         if (!input.trim()) { setError('Please enter an answer.'); return; }
@@ -156,6 +177,9 @@ export default function LiveInterview() {
     const aiCount = messages.filter(m => m.role === 'ai').length;
     const userCount = messages.filter(m => m.role === 'user').length;
     const progressPct = Math.min(100, Math.round((aiCount / 12) * 100));
+
+    // A completed interview must not render — the effect above redirects to /feedback
+    if (interviewStatus === 'completed') return null;
 
     return (
         <div className="app-layout">
@@ -203,13 +227,13 @@ export default function LiveInterview() {
                     </aside>
 
                     {/* ── RIGHT: Conversation ── */}
-                    <section className="iv-conversation" style={{ position: 'relative' }}>
+                    <section className="iv-conversation">
                         {/* Header */}
                         <div className="iv-header">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                                 <span className="iv-live-dot" />
                                 <span className="iv-live-label">Interview in Progress</span>
-                                <span style={{ color: 'var(--muted)', fontSize: 13, marginLeft: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>— {candidate?.member?.name}</span>
+                                <span className="iv-header-candidate" style={{ color: 'var(--muted)', fontSize: 13, marginLeft: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>— {candidate?.member?.name}</span>
                             </div>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                                 {warnings > 0 && (
@@ -217,6 +241,16 @@ export default function LiveInterview() {
                                         <ShieldAlert size={14} /> Warnings: {warnings}/3
                                     </span>
                                 )}
+                                <button
+                                    onClick={openCamera}
+                                    className={`btn iv-cam-btn ${webcamState === 'active' ? 'btn-primary' : 'btn-secondary'}`}
+                                    style={{ padding: '8px 12px', fontSize: 12 }}
+                                    aria-pressed={webcamState === 'active'}
+                                    title={webcamState === 'active' ? 'Camera is on — click to view preview' : 'Turn on camera'}
+                                >
+                                    {webcamState === 'active' ? <Video size={14} /> : <VideoOff size={14} />}
+                                    <span>{webcamState === 'active' ? 'Camera On' : 'Camera'}</span>
+                                </button>
                                 {isSynthSupported && (
                                     <button onClick={() => { setVoiceEnabled(v => !v); if (voiceEnabled) stopSpeaking(); }}
                                         className="btn btn-secondary" style={{ padding: '8px 12px', fontSize: 12 }}>
@@ -346,38 +380,60 @@ export default function LiveInterview() {
                                 <span style={{ fontSize: 11, color: 'var(--muted)' }}>{input.length} / 1200</span>
                             </div>
                         </div>
-
-                        {/* Proctoring webcam panel */}
-                        <div className="proctor-panel">
-                            <video ref={videoRef} className="proctor-video" autoPlay playsInline muted aria-label="Proctoring camera preview" />
-                            <canvas ref={canvasRef} width={96} height={72} style={{ display: 'none' }} />
-                            <div
-                                className="proctor-status"
-                                role="status"
-                                style={{ color: faceVisible === false ? '#DC2626' : faceVisible ? '#059669' : 'var(--muted)' }}
-                            >
-                                <span
-                                    className="proctor-dot"
-                                    style={{ background: faceVisible === false ? '#DC2626' : faceVisible ? '#10B981' : '#94A3B8' }}
-                                />
-                                {webcamState === 'active'
-                                    ? (faceVisible === false ? 'Face not detected' : faceVisible ? 'Face detected' : 'Analyzing…')
-                                    : webcamState === 'requested' ? 'Starting camera…'
-                                    : webcamState === 'denied' ? 'Camera denied'
-                                    : webcamState === 'unsupported' ? 'Camera unsupported'
-                                    : 'Camera off'}
-                            </div>
-                            {webcamError && <div className="proctor-error">{webcamError}</div>}
-                            <button
-                                onClick={webcamState === 'active' ? stopWebcam : startWebcam}
-                                className="btn btn-secondary"
-                                style={{ marginTop: 8, width: '100%', padding: '8px', fontSize: 12 }}
-                            >
-                                {webcamState === 'active' ? <><VideoOff size={13} /> Disable camera</> : <><Video size={13} /> Enable camera</>}
-                            </button>
-                        </div>
                     </section>
                 </div>
+
+                {/* Camera preview modal (opt-in, never permanent) */}
+                {(cameraOpen || webcamState === 'active' || webcamState === 'requested') && (
+                    <div
+                        className={`cam-backdrop${cameraOpen ? '' : ' cam-backdrop-hidden'}`}
+                        onClick={closeCamera}
+                        role="presentation"
+                    >
+                        <div className="cam-modal" role="dialog" aria-modal="true" aria-label="Camera preview" onClick={(e) => e.stopPropagation()}>
+                            <div className="cam-modal-head">
+                                <span className="cam-modal-title"><span className="cam-live-dot" /> Camera Preview</span>
+                                <button className="cam-modal-x" onClick={closeCamera} aria-label="Close camera preview">
+                                    <X size={16} />
+                                </button>
+                            </div>
+                            <div className="cam-modal-body">
+                                {webcamState === 'active' ? (
+                                    <>
+                                        <video ref={videoRef} className="cam-video" autoPlay playsInline muted aria-label="Live camera preview" />
+                                        <div className="cam-status" role="status">
+                                            <span className="cam-status-dot" /> Camera On
+                                        </div>
+                                        {faceVisible === false && (
+                                            <div className="cam-face-warn" role="status">Face not detected — please look at the camera.</div>
+                                        )}
+                                    </>
+                                ) : webcamState === 'requested' ? (
+                                    <div className="cam-empty">
+                                        <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
+                                        <span>Starting camera…</span>
+                                    </div>
+                                ) : (
+                                    <div className="cam-empty cam-error">
+                                        <VideoOff size={22} />
+                                        <span>{webcamState === 'unsupported'
+                                            ? 'Camera is not supported in this browser.'
+                                            : 'Camera access is disabled. Enable camera permission to use video.'}</span>
+                                    </div>
+                                )}
+                                <canvas ref={canvasRef} width={96} height={72} style={{ display: 'none' }} />
+                            </div>
+                            <div className="cam-modal-foot">
+                                <button className="btn btn-secondary" onClick={turnOffCamera}>
+                                    <VideoOff size={14} /> Turn Off Camera
+                                </button>
+                                <button className="btn btn-primary" onClick={closeCamera}>
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );

@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext';
 
 export default function Sidebar({ active = 'dashboard' }) {
     const navigate = useNavigate();
-    const { sessionId, logout } = useApp();
+    const { sessionId, logout, interviewStatus } = useApp();
     const [toastMsg, setToastMsg] = useState(null);
 
     const showToast = (msg) => {
@@ -17,7 +17,11 @@ export default function Sidebar({ active = 'dashboard' }) {
 
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={19} />, action: () => navigate('/dashboard') },
-        { id: 'interview', label: 'Interview', icon: <MessageSquare size={19} />, action: () => { if (!sessionId) { showToast('Start an interview from the Dashboard first.'); return; } navigate('/interview'); } },
+        { id: 'interview', label: 'Interview', icon: <MessageSquare size={19} />, action: () => {
+            if (interviewStatus === 'completed') { navigate('/feedback'); return; }
+            if (!sessionId) { showToast('Start an interview from the Dashboard first.'); return; }
+            navigate('/interview');
+        } },
         { id: 'feedback', label: 'Feedback', icon: <Award size={19} />, action: () => navigate('/feedback') },
         { id: 'profile', label: 'Profile', icon: <User size={19} />, action: () => navigate('/profile') },
     ];
