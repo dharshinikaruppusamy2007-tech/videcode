@@ -22,7 +22,7 @@ export default class ErrorBoundary extends Component {
     render() {
         if (this.state.hasError) {
             return (
-                <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC', padding: 24 }}>
+                <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8F7FF', padding: 24 }}>
                     <div style={{ textAlign: 'center', maxWidth: 420, width: '100%' }}>
                         <h1 style={{ fontSize: 'clamp(22px,4vw,28px)', margin: '0 0 8px' }}>Something went wrong.</h1>
                         <p style={{ color: 'var(--muted)', fontSize: 14, margin: '0 0 24px' }}>

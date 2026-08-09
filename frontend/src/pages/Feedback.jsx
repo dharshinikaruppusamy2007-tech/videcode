@@ -18,8 +18,8 @@ const scoreLabel = (s) => {
 };
 
 const scoreColor = (s) => {
-    if (s >= 8.5) return '#10B981';
-    if (s >= 7) return '#4F46E5';
+    if (s >= 8.5) return '#6C4DE6';
+    if (s >= 7) return '#9B8AFB';
     if (s >= 5) return '#F59E0B';
     return '#EF4444';
 };
@@ -34,7 +34,7 @@ function ScoreRing({ score, color }) {
     return (
         <div className="fd-ring" style={{ position: 'relative', width: size, height: size }}>
             <svg width={size} height={size} role="img" aria-label={`Overall score ${score.toFixed(1)} out of 10`}>
-                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EEF2F7" strokeWidth={stroke} />
+                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EDE9FE" strokeWidth={stroke} />
                 <circle
                     cx={size / 2}
                     cy={size / 2}
@@ -48,7 +48,7 @@ function ScoreRing({ score, color }) {
                 />
             </svg>
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ fontSize: 44, fontWeight: 700, lineHeight: 1, color: 'var(--text)' }}>{score.toFixed(1)}</div>
+                <div style={{ fontSize: 44, fontWeight: 800, lineHeight: 1, color: 'var(--text)' }}>{score.toFixed(1)}</div>
                 <div style={{ fontSize: 14, color: 'var(--muted)', marginTop: 4 }}>out of 10</div>
             </div>
         </div>
@@ -157,7 +157,7 @@ export default function Feedback() {
                                             marginBottom: 10,
                                             padding: '10px 14px',
                                             borderRadius: 10,
-                                            background: msg.role === 'user' ? 'var(--primary-light)' : '#F1F5F9',
+                                            background: msg.role === 'user' ? '#F1EEFF' : '#F8F7FF',
                                         }}
                                     >
                                         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', marginBottom: 4 }}>
@@ -182,7 +182,7 @@ export default function Feedback() {
                     <div className="fd-container animate-in">
                         <div className="fd-empty">
                             <div className="fd-empty-icon">
-                                <FileQuestion size={34} color="var(--primary)" />
+                                <FileQuestion size={34} color="#6C4DE6" />
                             </div>
                             <h1>Interview not completed yet</h1>
                             <p>Complete your interview to receive AI-generated feedback.</p>
@@ -212,7 +212,7 @@ export default function Feedback() {
                     <div className="fd-container animate-in">
                         <div className="fd-empty">
                             <div className="fd-empty-icon">
-                                <Award size={34} color="var(--primary)" />
+                                <Award size={34} color="#6C4DE6" />
                             </div>
                             <h1>Feedback is not available yet.</h1>
                             <p>Complete your interview to receive AI-generated feedback.</p>
@@ -249,7 +249,7 @@ export default function Feedback() {
                     {/* 2 + 3. Score & breakdown */}
                     <div className="fd-grid-top">
                         <div className="card fd-score-card">
-                            <h3>Overall Score</h3>
+                            <h3 style={{ color: '#4B32A8' }}>Overall Score</h3>
                             {overall !== null ? (
                                 <>
                                     <ScoreRing score={overall} color={ringColor} />
@@ -263,7 +263,7 @@ export default function Feedback() {
                         </div>
 
                         <div className="card fd-breakdown-card">
-                            <h3>Performance Breakdown</h3>
+                            <h3 style={{ color: '#4B32A8' }}>Performance Breakdown</h3>
                             {categories.length > 0 ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                                     {categories.map((category, i) => (
@@ -288,14 +288,14 @@ export default function Feedback() {
                     {(strengths.length > 0 || gaps.length > 0) && (
                         <div className="fd-grid-col">
                             {strengths.length > 0 && (
-                                <div className="card fd-col-card">
-                                    <h3 style={{ color: '#065F46' }}>
-                                        <CheckCircle size={18} color="#10B981" /> Strengths
+                                <div className="card fd-col-card" style={{ borderTopColor: '#6C4DE6' }}>
+                                    <h3 style={{ color: '#4B32A8' }}>
+                                        <CheckCircle size={18} color="#6C4DE6" /> Strengths
                                     </h3>
                                     <ul>
                                         {strengths.map((item, i) => (
                                             <li key={i} className="fd-li">
-                                                <CheckCircle size={18} color="#10B981" className="fd-li-icon" />
+                                                <CheckCircle size={18} color="#6C4DE6" className="fd-li-icon" />
                                                 <span>{item}</span>
                                             </li>
                                         ))}
@@ -304,7 +304,7 @@ export default function Feedback() {
                             )}
 
                             {gaps.length > 0 && (
-                                <div className="card fd-col-card">
+                                <div className="card fd-col-card" style={{ borderTopColor: '#F59E0B' }}>
                                     <h3 style={{ color: '#92400E' }}>
                                         <AlertTriangle size={18} color="#F59E0B" /> Areas to Improve
                                     </h3>
@@ -324,13 +324,13 @@ export default function Feedback() {
                     {/* 6. Recommendations */}
                     {next.length > 0 && (
                         <div className="card fd-rec-card">
-                            <h3 style={{ color: 'var(--primary)' }}>
-                                <Lightbulb size={18} color="var(--primary)" /> Recommendations
+                            <h3>
+                                <Lightbulb size={18} color="#6C4DE6" /> Recommendations
                             </h3>
                             <ul>
                                 {next.map((item, i) => (
                                     <li key={i} className="fd-rec-item">
-                                        <ArrowRight size={16} color="var(--primary)" className="fd-li-icon" />
+                                        <ArrowRight size={16} color="#6C4DE6" className="fd-li-icon" />
                                         <span>{item}</span>
                                     </li>
                                 ))}

@@ -66,10 +66,10 @@ export default function Profile() {
     ];
 
     const statCards = [
-        { label: 'Completed Days', val: completedDays, icon: <CalendarCheck size={18} color="#10B981" />, bg: '#D1FAE5' },
-        { label: 'Skipped Days', val: skippedDays, icon: <CalendarX size={18} color="#F43F5E" />, bg: '#FFE4E6' },
-        { label: 'Modules Completed', val: modulesCompleted, icon: <BookOpen size={18} color="#3B82F6" />, bg: '#DBEAFE' },
-        { label: 'Overall Progress', val: `${progress}%`, icon: <TrendingUp size={18} color="#8B5CF6" />, bg: '#EDE9FE' },
+        { label: 'Completed Days', val: completedDays, icon: <CalendarCheck size={18} color="#6C4DE6" />, bg: '#F1EEFF' },
+        { label: 'Skipped Days', val: skippedDays, icon: <CalendarX size={18} color="#F43F5E" />, bg: '#FFE9EC' },
+        { label: 'Modules Completed', val: modulesCompleted, icon: <BookOpen size={18} color="#6C4DE6" />, bg: '#EDE9FE' },
+        { label: 'Overall Progress', val: `${progress}%`, icon: <TrendingUp size={18} color="#9B8AFB" />, bg: '#F8F7FF' },
     ];
 
     return (
@@ -79,9 +79,11 @@ export default function Profile() {
             <main className="main-content" style={{ background: 'var(--bg)' }}>
                 <style>{`
                     .pf { padding:28px 40px; max-width:760px; width:100%; margin:0 auto; }
-                    .pf-avatar { width:84px; height:84px; border-radius:50%; background:linear-gradient(135deg,#4F46E5,#7C3AED); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Outfit'; font-weight:700; font-size:30px; box-shadow:0 8px 20px rgba(79,70,229,0.35); }
+                    .pf-avatar { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#9B8AFB,#6C4DE6 55%,#4B32A8); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Plus Jakarta Sans'; font-weight:700; font-size:32px; box-shadow:0 10px 24px rgba(108,77,230,0.4); }
                     .pf-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
                     .pf-cta { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+                    .pf-stat-icon { width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+                    .pf-topic-chip { padding:8px 10px; border-radius:8px; font-size:13px; }
                     @media(max-width:768px){
                         .pf { padding:20px 16px 84px; }
                         .pf-grid { grid-template-columns:1fr 1fr; }
@@ -110,13 +112,13 @@ export default function Profile() {
                     </div>
 
                     {/* Interview Progress */}
-                    <h3 style={{ fontSize: 16, margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Award size={18} color="var(--primary)" /> Interview Progress
+                    <h3 style={{ fontSize: 16, margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 8, color: '#4B32A8' }}>
+                        <Award size={18} color="#6C4DE6" /> Interview Progress
                     </h3>
                     <div className="pf-grid" style={{ marginBottom: 28 }}>
                         {statCards.map((s, i) => (
                             <div key={i} className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px' }}>
-                                <div style={{ width: 38, height: 38, borderRadius: 9, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{s.icon}</div>
+                                <div className="pf-stat-icon" style={{ background: s.bg }}>{s.icon}</div>
                                 <div style={{ minWidth: 0 }}>
                                     <div style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 500 }}>{s.label}</div>
                                     <div style={{ fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>{s.val}</div>
@@ -126,13 +128,13 @@ export default function Profile() {
                     </div>
 
                     {/* Learning / Interview information */}
-                    <h3 style={{ fontSize: 16, margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <User size={18} color="var(--primary)" /> Learning / Interview Information
+                    <h3 style={{ fontSize: 16, margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 8, color: '#4B32A8' }}>
+                        <User size={18} color="#6C4DE6" /> Learning / Interview Information
                     </h3>
                     <div className="card" style={{ marginBottom: 20, padding: 8 }}>
                         {infoRows.map((row, i) => (
                             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 12px', borderBottom: i < infoRows.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                                <span style={{ color: 'var(--primary)', flexShrink: 0, display: 'flex' }}>{row.icon}</span>
+                                <span style={{ color: '#6C4DE6', flexShrink: 0, display: 'flex' }}>{row.icon}</span>
                                 <span style={{ color: 'var(--muted)', fontSize: 13, flex: 1 }}>{row.label}</span>
                                 <span style={{ fontSize: 14, fontWeight: 600, textAlign: 'right', wordBreak: 'break-word', maxWidth: '60%' }}>{row.value ?? '—'}</span>
                             </div>
@@ -143,13 +145,13 @@ export default function Profile() {
                     <div className="pf-topics" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
                         <div className="card" style={{ maxHeight: 220, display: 'flex', flexDirection: 'column' }}>
                             <h4 style={{ fontSize: 14, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981', display: 'inline-block' }} /> Completed Topics
+                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#6C4DE6', display: 'inline-block' }} /> Completed Topics
                             </h4>
                             <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
                                 {completedTopics.length === 0
                                     ? <p style={{ color: 'var(--muted)', fontSize: 13 }}>None yet.</p>
                                     : completedTopics.map((t, i) => (
-                                        <div key={i} style={{ padding: '8px 10px', background: '#F0FDF4', borderRadius: 6, fontSize: 13, color: '#065F46' }}>
+                                        <div key={i} className="pf-topic-chip" style={{ background: '#F1EEFF', color: '#4B32A8' }}>
                                             Day {t.day}: {t.title}
                                         </div>
                                     ))
@@ -164,7 +166,7 @@ export default function Profile() {
                                 {skippedTopics.length === 0
                                     ? <p style={{ color: 'var(--muted)', fontSize: 13 }}>None skipped. Great!</p>
                                     : skippedTopics.map((t, i) => (
-                                        <div key={i} style={{ padding: '8px 10px', background: '#FFF1F2', borderRadius: 6, fontSize: 13, color: '#BE123C' }}>
+                                        <div key={i} className="pf-topic-chip" style={{ background: '#FFE9EC', color: '#BE123C' }}>
                                             Day {t.day}: {t.title}
                                         </div>
                                     ))

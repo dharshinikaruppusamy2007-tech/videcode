@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, CheckCircle2 } from 'lucide-react';
+import { Bot, CheckCircle2, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import api from '../services/api';
 
@@ -58,15 +58,24 @@ export default function Login() {
     const features = ['Personalized technical questions', 'Real-time AI evaluation', 'Detailed strengths & gaps feedback', 'Track your learning progress'];
 
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F8FAFC' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F8F7FF' }}>
             <style>{`
                 .login-wrap { display:flex; flex-direction:row; min-height:100vh; }
-                .login-brand { width:42%; background:linear-gradient(145deg,#1E1B4B,#312E81); padding:60px 48px; display:flex; flex-direction:column; }
-                .login-form  { flex:1; padding:60px 48px; display:flex; align-items:center; justify-content:center; overflow-y:auto; }
+                .login-brand { width:42%; background:
+                    radial-gradient(900px 500px at -10% -10%, rgba(156,138,251,0.35), transparent 60%),
+                    radial-gradient(700px 500px at 110% 110%, rgba(124,91,240,0.35), transparent 60%),
+                    linear-gradient(150deg, #5436BD 0%, #4B32A8 55%, #3A2A8A 100%);
+                    padding:60px 48px; display:flex; flex-direction:column; color:#fff; position:relative; overflow:hidden; }
+                .login-brand .glow-dot { position:absolute; border-radius:50%; background:radial-gradient(circle at 30% 30%, #9B8AFB, transparent 70%); opacity:0.5; pointer-events:none; }
+                .login-form  { flex:1; padding:60px 48px; display:flex; align-items:center; justify-content:center; overflow-y:auto; background:
+                    radial-gradient(600px 400px at 90% 10%, rgba(156,138,251,0.08), transparent 60%),
+                    #F8F7FF; }
+                .login-card { width:100%; max-width:420px; background:#fff; border:1px solid #E6E1F5; border-radius:18px; box-shadow:0 12px 34px rgba(75,50,168,0.12); padding:28px; }
+                .cand-opt { display:flex; align-items:center; justify-content:space-between; width:100%; text-align:left; padding:14px 16px; border-radius:12px; cursor:pointer; transition:border-color 0.15s, background 0.15s, box-shadow 0.15s; }
                 @media(max-width:860px){
                     .login-wrap  { flex-direction:column; }
-                    .login-brand { width:100%; padding:36px 24px; }
-                    .login-form  { padding:32px 20px 40px; }
+                    .login-brand { width:100%; padding:32px 24px; }
+                    .login-form  { padding:24px 16px 40px; }
                     .brand-feats { display:none!important; }
                 }
             `}</style>
@@ -74,22 +83,28 @@ export default function Login() {
             <div className="login-wrap animate-in">
                 {/* ── Branding ── */}
                 <div className="login-brand">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 40 }}>
-                        <div style={{ width: 42, height: 42, borderRadius: 11, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="glow-dot" style={{ width: 260, height: 260, top: -80, right: -60 }} />
+                    <div className="glow-dot" style={{ width: 180, height: 180, bottom: 40, left: -60 }} />
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 40, position: 'relative', zIndex: 1 }}>
+                        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#9B8AFB,#6C4DE6,#4B32A8)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(20,10,60,0.4)' }}>
                             <Bot size={24} color="#fff" />
                         </div>
-                        <span style={{ color: '#fff', fontFamily: 'Outfit', fontWeight: 700, fontSize: 20 }}>AI Interview Agent</span>
+                        <div>
+                            <div style={{ color: '#fff', fontWeight: 800, fontSize: 19, lineHeight: 1.15 }}>AI Interview Agent</div>
+                            <div style={{ color: '#D6CCF8', fontSize: 12, fontWeight: 500, marginTop: 2 }}>Your Personal AI Interviewer</div>
+                        </div>
                     </div>
 
-                    <div style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    <div style={{ marginTop: 'auto', marginBottom: 'auto', position: 'relative', zIndex: 1 }}>
                         <h2 style={{ color: '#fff', fontSize: 'clamp(28px,5vw,42px)', lineHeight: 1.15, marginBottom: 0 }}>
                             Your Personal<br />
-                            <span style={{ color: '#818CF8' }}>AI Interviewer</span>
+                            <span style={{ color: '#9B8AFB' }}>AI Interviewer</span>
                         </h2>
                         <ul className="brand-feats" style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 16 }}>
                             {features.map((f, i) => (
-                                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#C7D2FE', fontSize: 15 }}>
-                                    <CheckCircle2 size={18} color="#818CF8" /> {f}
+                                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#E4DCFC', fontSize: 15 }}>
+                                    <CheckCircle2 size={18} color="#9B8AFB" /> {f}
                                 </li>
                             ))}
                         </ul>
@@ -98,14 +113,17 @@ export default function Login() {
 
                 {/* ── Form ── */}
                 <div className="login-form">
-                    <div style={{ width: '100%', maxWidth: 420 }}>
-                        <h2 style={{ fontSize: 'clamp(22px,4vw,30px)', marginBottom: 6 }}>Welcome Back! 👋</h2>
-                        <p style={{ color: 'var(--muted)', marginBottom: 28, fontSize: 14 }}>Select a candidate profile to begin.</p>
+                    <div className="login-card">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                            <Sparkles size={18} color="#6C4DE6" />
+                            <h2 style={{ fontSize: 'clamp(21px,4vw,26px)', margin: 0 }}>Welcome Back!</h2>
+                        </div>
+                        <p style={{ color: 'var(--muted)', marginBottom: 24, fontSize: 14 }}>Select a candidate profile to begin.</p>
 
                         {error && <div className="banner-error" style={{ marginBottom: 20 }}>{error}</div>}
 
                         {/* Candidate cards */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '45vh', overflowY: 'auto', marginBottom: 20, paddingRight: 4 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '42vh', overflowY: 'auto', marginBottom: 20, paddingRight: 4 }}>
                             {loading ? (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--muted)', padding: 16 }}>
                                     <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} /> Loading candidates...
@@ -122,22 +140,21 @@ export default function Login() {
                                         tabIndex={0}
                                         aria-label={`Select candidate ${name}`}
                                         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelected(c); setError(''); } }}
+                                        className="cand-opt"
                                         style={{
-                                            padding: '14px 16px', border: `2px solid ${isSel ? 'var(--primary)' : 'var(--border)'}`,
-                                            borderRadius: 10, cursor: 'pointer',
-                                            background: isSel ? 'var(--primary-light)' : '#fff',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                            transition: 'border-color 0.15s, background 0.15s',
+                                            border: `2px solid ${isSel ? '#6C4DE6' : '#E6E1F5'}`,
+                                            background: isSel ? '#F8F7FF' : '#fff',
+                                            boxShadow: isSel ? '0 0 0 4px rgba(108,77,230,0.12)' : 'none',
                                             outline: isSel ? 'none' : undefined,
                                         }}>
-                                        <div>
+                                        <div style={{ minWidth: 0 }}>
                                             <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{name}</div>
                                             <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>ID: {id}</div>
                                         </div>
                                         <div style={{
                                             width: 18, height: 18, borderRadius: '50%',
-                                            border: `2px solid ${isSel ? 'var(--primary)' : '#CBD5E1'}`,
-                                            background: isSel ? 'var(--primary)' : 'transparent',
+                                            border: `2px solid ${isSel ? '#6C4DE6' : '#CBD5E1'}`,
+                                            background: isSel ? '#6C4DE6' : 'transparent',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                                         }}>
                                             {isSel && <div style={{ width: 7, height: 7, background: '#fff', borderRadius: '50%' }} />}
