@@ -171,7 +171,7 @@ export default function LiveInterview() {
     // AI avatar / status state derived from the existing voice + interview state
     const avatarState = thinking ? 'thinking' : voiceStatus === 'speaking' ? 'speaking' : voiceStatus === 'listening' ? 'listening' : 'idle';
     const statusText = thinking ? 'Thinking…' : voiceStatus === 'speaking' ? 'AI is speaking…' : voiceStatus === 'listening' ? 'Listening…' : 'Ready for your answer';
-    const statusDot = thinking ? '#9B8AFB' : voiceStatus === 'speaking' ? '#6C4DE6' : voiceStatus === 'listening' ? '#7C5BF0' : '#9B8AFB';
+    const statusDot = thinking ? '#9B8AFB' : voiceStatus === 'speaking' ? '#6C4DE6' : voiceStatus === 'listening' ? '#4B32A8' : '#9B8AFB';
 
     // Interview progress derived from the live conversation (not backend-provided)
     const aiCount = messages.filter(m => m.role === 'ai').length;

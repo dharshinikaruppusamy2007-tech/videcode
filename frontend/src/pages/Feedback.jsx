@@ -22,9 +22,9 @@ const scoreLabel = (s) => {
 
 const scoreColor = (s) => {
     if (s >= 8.5) return '#6C4DE6';
-    if (s >= 7) return '#9B8AFB';
-    if (s >= 5) return '#F59E0B';
-    return '#EF4444';
+    if (s >= 7) return '#7C5CE0';
+    if (s >= 5) return '#9B8AFB';
+    return '#F59E0B';
 };
 
 function ScoreRing({ score, color }) {
@@ -37,7 +37,7 @@ function ScoreRing({ score, color }) {
     return (
         <div className="fd-ring" style={{ position: 'relative', width: size, height: size }}>
             <svg width={size} height={size} role="img" aria-label={`Overall score ${score.toFixed(1)} out of 10`}>
-                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EDE9FE" strokeWidth={stroke} />
+                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E6E1F5" strokeWidth={stroke} />
                 <circle
                     cx={size / 2}
                     cy={size / 2}

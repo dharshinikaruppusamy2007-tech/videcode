@@ -74,9 +74,9 @@ export default function Sidebar({ active = 'dashboard' }) {
             {toastMsg && (
                 <div style={{
                     position: 'fixed', bottom: 72, left: '50%', transform: 'translateX(-50%)',
-                    background: '#3A2A6B', color: '#fff', padding: '10px 20px', borderRadius: 10,
+                    background: '#4B32A8', color: '#fff', padding: '10px 20px', borderRadius: 10,
                     fontSize: 13, fontWeight: 600, zIndex: 200,
-                    boxShadow: '0 8px 20px rgba(20,10,60,0.4)', pointerEvents: 'none',
+                    boxShadow: '0 8px 20px rgba(75,50,168,0.4)', pointerEvents: 'none',
                     whiteSpace: 'nowrap'
                 }}>
                     {toastMsg}

@@ -149,7 +149,7 @@ export default function Dashboard() {
                             {[
                                 { label: 'Completed Days', val: daysOk, icon: <CalendarCheck size={18} color="#6C4DE6" />, bg: '#F1EEFF' },
                                 { label: 'Skipped Days', val: daysSkip, icon: <CalendarX size={18} color="#F43F5E" />, bg: '#FFE9EC' },
-                                { label: 'Modules Done', val: modulesDone, icon: <BookOpen size={18} color="#6C4DE6" />, bg: '#EDE9FE' },
+                                { label: 'Modules Done', val: modulesDone, icon: <BookOpen size={18} color="#6C4DE6" />, bg: '#E4DFFB' },
                                 { label: 'Progress', val: `${progress}%`, icon: <TrendingUp size={18} color="#9B8AFB" />, bg: '#F8F7FF' }
                             ].map((s, i) => (
                                 <div key={i} className="card" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -202,7 +202,7 @@ export default function Dashboard() {
                     )}
 
                     {/* CTA */}
-                    <div className="card cta-row animate-in" style={{ background: 'linear-gradient(120deg,#F8F7FF,#F1EEFF 70%,#EDE9FE)' }}>
+                    <div className="card cta-row animate-in" style={{ background: 'linear-gradient(120deg,#F8F7FF,#F1EEFF 70%,#E4DFFB)' }}>
                         <div>
                             <h3 style={{ fontSize: 17, margin: '0 0 4px' }}>Ready to start your interview?</h3>
                             <p style={{ color: 'var(--muted)', margin: 0, fontSize: 13 }}>The AI will evaluate you across your curriculum topics.</p>

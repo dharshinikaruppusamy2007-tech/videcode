@@ -1,16 +1,17 @@
 import { Sparkles } from 'lucide-react';
 
 /**
- * Professional semi-realistic female AI interviewer avatar for the corporate
- * interview platform. Polished digital-human illustration: realistic eyes,
- * subtle makeup, neat hairstyle, formal blazer, soft studio lighting with
- * lavender/purple ambient glow. `state` is idle | speaking | listening | thinking.
+ * Professional 3D-cartoon AI interviewer avatar for the corporate interview
+ * platform. Polished digital-human illustration: realistic eyes, subtle
+ * makeup, neat hairstyle, formal deep-purple blazer with a white/lavender
+ * shirt, soft studio lighting with a lavender/purple ambient glow.
+ * `state` is idle | speaking | listening | thinking.
  * Purely visual — it does not generate any voice.
  */
 function AvatarArt({ id }) {
     const uid = (n) => `${id}-${n}`;
     return (
-        <svg viewBox="0 0 260 300" role="img" aria-label="Professional female AI interviewer avatar" className="avatar-art" style={{ width: '100%', height: '100%', display: 'block' }}>
+        <svg viewBox="0 0 260 300" role="img" aria-label="Professional AI interviewer avatar" className="avatar-art" style={{ width: '100%', height: '100%', display: 'block' }}>
             <defs>
                 <linearGradient id={uid('skin')} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#FBCDA7" />
@@ -27,9 +28,9 @@ function AvatarArt({ id }) {
                     <stop offset="100%" stopColor="#A4764E" stopOpacity="0" />
                 </linearGradient>
                 <radialGradient id={uid('halo')} cx="0.5" cy="0.5" r="0.5">
-                    <stop offset="0%" stopColor="#9B8AFB" stopOpacity="0.32" />
-                    <stop offset="70%" stopColor="#7C5BF0" stopOpacity="0.12" />
-                    <stop offset="100%" stopColor="#7C5BF0" stopOpacity="0" />
+                    <stop offset="0%" stopColor="#9B8AFB" stopOpacity="0.34" />
+                    <stop offset="70%" stopColor="#6C4DE6" stopOpacity="0.12" />
+                    <stop offset="100%" stopColor="#6C4DE6" stopOpacity="0" />
                 </radialGradient>
                 <radialGradient id={uid('iris')} cx="0.42" cy="0.38" r="0.95">
                     <stop offset="0%" stopColor="#8A5A33" />
@@ -45,16 +46,16 @@ function AvatarArt({ id }) {
                     <stop offset="100%" stopColor="#B25A58" />
                 </linearGradient>
                 <linearGradient id={uid('blazer')} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#7C5BF0" />
+                    <stop offset="0%" stopColor="#6C4DE6" />
                     <stop offset="100%" stopColor="#4B32A8" />
                 </linearGradient>
                 <linearGradient id={uid('blazerDark')} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#5A3FD0" />
-                    <stop offset="100%" stopColor="#3A2385" />
+                    <stop offset="0%" stopColor="#4B32A8" />
+                    <stop offset="100%" stopColor="#3C2787" />
                 </linearGradient>
                 <linearGradient id={uid('shirt')} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#FFFFFF" />
-                    <stop offset="100%" stopColor="#EDE6FF" />
+                    <stop offset="100%" stopColor="#F1EEFF" />
                 </linearGradient>
             </defs>
 
@@ -79,20 +80,20 @@ function AvatarArt({ id }) {
             <path d="M130 224 L130 290" stroke="#FFFFFF" strokeOpacity="0.16" strokeWidth="1.5" />
             <path d="M112 212 L96 246 L110 260 L124 230 Z" fill={`url(#${uid('blazerDark')})`} />
             <path d="M148 212 L164 246 L150 260 L136 230 Z" fill={`url(#${uid('blazerDark')})`} />
-            <circle cx="129" cy="256" r="2.2" fill="#3A2385" />
-            <circle cx="129" cy="272" r="2.2" fill="#3A2385" />
+            <circle cx="129" cy="256" r="2.2" fill="#3C2787" />
+            <circle cx="129" cy="272" r="2.2" fill="#3C2787" />
             <circle cx="127.6" cy="255.4" r="0.8" fill="#FFFFFF" opacity="0.5" />
             <circle cx="127.6" cy="271.4" r="0.8" fill="#FFFFFF" opacity="0.5" />
-            <path d="M78 236 C 70 246, 62 260, 58 276 C 64 256, 72 246, 80 240 Z" fill="#9B8AFB" opacity="0.12" />
+            <path d="M78 236 C 70 246, 62 260, 58 276 C 64 256, 72 246, 80 240 Z" fill="#9B8AFB" opacity="0.14" />
 
             {/* Ears + stud earrings */}
             <ellipse cx="83" cy="124" rx="9" ry="13" fill="#EFAE84" />
             <ellipse cx="83" cy="125" rx="4" ry="6" fill="#D99669" opacity="0.5" />
             <ellipse cx="177" cy="124" rx="9" ry="13" fill="#EFAE84" />
             <ellipse cx="177" cy="125" rx="4" ry="6" fill="#D99669" opacity="0.5" />
-            <circle cx="83" cy="139" r="1.9" fill="#D8C8F7" />
+            <circle cx="83" cy="139" r="1.9" fill="#C9BFF5" />
             <circle cx="82.4" cy="138.4" r="0.7" fill="#FFFFFF" opacity="0.9" />
-            <circle cx="177" cy="139" r="1.9" fill="#D8C8F7" />
+            <circle cx="177" cy="139" r="1.9" fill="#C9BFF5" />
             <circle cx="176.4" cy="138.4" r="0.7" fill="#FFFFFF" opacity="0.9" />
 
             {/* Face */}
@@ -169,27 +170,53 @@ function AvatarArt({ id }) {
             </g>
 
             {/* Lavender rim light on both face edges */}
-            <path d="M84 108 C 82 128, 84 152, 92 172 C 88 156, 86 134, 87 114 C 87 110, 85 108, 84 108 Z" fill="#9B8AFB" opacity="0.14" />
-            <path d="M176 108 C 178 128, 176 152, 168 172 C 172 156, 174 134, 173 114 C 173 110, 175 108, 176 108 Z" fill="#9B8AFB" opacity="0.14" />
+            <path d="M84 108 C 82 128, 84 152, 92 172 C 88 156, 86 134, 87 114 C 87 110, 85 108, 84 108 Z" fill="#9B8AFB" opacity="0.16" />
+            <path d="M176 108 C 178 128, 176 152, 168 172 C 172 156, 174 134, 173 114 C 173 110, 175 108, 176 108 Z" fill="#9B8AFB" opacity="0.16" />
         </svg>
     );
 }
 
 /**
- * Professional AI Interviewer avatar with soft lavender glow and voice-state
- * ring. `state` is one of idle | speaking | listening | thinking.
- * Purely visual — it does not generate any voice.
+ * Professional AI Interviewer avatar with soft lavender glow, subtle floating
+ * particles and a voice-state ring. `state` is one of idle | speaking |
+ * listening | thinking. Purely visual — it does not generate any voice.
  */
 export default function AIInterviewerAvatar({ state = 'idle', size = 240 }) {
     const ringClass = ['idle', 'speaking', 'listening', 'thinking'].includes(state) ? state : 'idle';
 
+    const particles = [
+        { top: '18%', left: '22%', width: 5, height: 5, delay: '0s', duration: '5.5s' },
+        { top: '30%', left: '78%', width: 4, height: 4, delay: '0.8s', duration: '6.5s' },
+        { top: '58%', left: '12%', width: 3, height: 3, delay: '1.4s', duration: '5s' },
+        { top: '70%', left: '72%', width: 5, height: 5, delay: '0.4s', duration: '7s' },
+        { top: '82%', left: '38%', width: 4, height: 4, delay: '1.9s', duration: '6s' },
+        { top: '12%', left: '58%', width: 3, height: 3, delay: '2.4s', duration: '5.8s' },
+        { top: '46%', left: '86%', width: 3, height: 3, delay: '1.1s', duration: '6.2s' },
+    ];
+
     return (
         <div
             className="avatar-stage"
-            style={{ width: size, height: size }}
-            aria-label="Professional female AI interviewer avatar"
+            style={{ ['--avatar-size']: `${size}px` }}
+            aria-label="Professional AI interviewer avatar"
         >
             <div className={`avatar-ring ${ringClass}`} />
+            <div className="avatar-particles" aria-hidden="true">
+                {particles.map((p, i) => (
+                    <span
+                        key={i}
+                        className="avatar-particle"
+                        style={{
+                            top: p.top,
+                            left: p.left,
+                            width: p.width,
+                            height: p.height,
+                            animationDelay: p.delay,
+                            animationDuration: p.duration,
+                        }}
+                    />
+                ))}
+            </div>
             <div style={{ width: '76%', height: '90%', position: 'relative', zIndex: 2 }}>
                 <AvatarArt id="ai-avatar" />
             </div>

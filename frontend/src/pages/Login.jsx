@@ -62,15 +62,15 @@ export default function Login() {
             <style>{`
                 .login-wrap { display:flex; flex-direction:row; min-height:100vh; }
                 .login-brand { width:42%; background:
-                    radial-gradient(900px 500px at -10% -10%, rgba(156,138,251,0.35), transparent 60%),
-                    radial-gradient(700px 500px at 110% 110%, rgba(124,91,240,0.35), transparent 60%),
-                    linear-gradient(150deg, #5436BD 0%, #4B32A8 55%, #3A2A8A 100%);
+                    radial-gradient(900px 500px at -10% -10%, rgba(155,138,251,0.32), transparent 60%),
+                    radial-gradient(700px 500px at 110% 110%, rgba(108,77,230,0.38), transparent 60%),
+                    linear-gradient(150deg, #5A3FD0 0%, #4B32A8 55%, #3C2787 100%);
                     padding:60px 48px; display:flex; flex-direction:column; color:#fff; position:relative; overflow:hidden; }
                 .login-brand .glow-dot { position:absolute; border-radius:50%; background:radial-gradient(circle at 30% 30%, #9B8AFB, transparent 70%); opacity:0.5; pointer-events:none; }
                 .login-form  { flex:1; padding:60px 48px; display:flex; align-items:center; justify-content:center; overflow-y:auto; background:
-                    radial-gradient(600px 400px at 90% 10%, rgba(156,138,251,0.08), transparent 60%),
+                    radial-gradient(600px 400px at 90% 10%, rgba(108,77,230,0.08), transparent 60%),
                     #F8F7FF; }
-                .login-card { width:100%; max-width:420px; background:#fff; border:1px solid #E6E1F5; border-radius:18px; box-shadow:0 12px 34px rgba(75,50,168,0.12); padding:28px; }
+                .login-card { width:100%; max-width:420px; background:#fff; border:1px solid #E6E1F5; border-radius:18px; box-shadow:0 12px 34px rgba(108,77,230,0.14); padding:28px; }
                 .cand-opt { display:flex; align-items:center; justify-content:space-between; width:100%; text-align:left; padding:14px 16px; border-radius:12px; cursor:pointer; transition:border-color 0.15s, background 0.15s, box-shadow 0.15s; }
                 @media(max-width:860px){
                     .login-wrap  { flex-direction:column; }
@@ -86,29 +86,29 @@ export default function Login() {
                     <div className="glow-dot" style={{ width: 260, height: 260, top: -80, right: -60 }} />
                     <div className="glow-dot" style={{ width: 180, height: 180, bottom: 40, left: -60 }} />
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 40, position: 'relative', zIndex: 1 }}>
-                        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#9B8AFB,#6C4DE6,#4B32A8)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(20,10,60,0.4)' }}>
-                            <Bot size={24} color="#fff" />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 40, position: 'relative', zIndex: 1 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#9B8AFB,#6C4DE6,#4B32A8)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px rgba(75,50,168,0.4)' }}>
+                                <Bot size={24} color="#fff" />
+                            </div>
+                            <div>
+                                <div style={{ color: '#fff', fontWeight: 800, fontSize: 19, lineHeight: 1.15 }}>AI Interview Agent</div>
+                                <div style={{ color: '#C9BFF5', fontSize: 12, fontWeight: 500, marginTop: 2 }}>Your Personal AI Interviewer</div>
+                            </div>
                         </div>
-                        <div>
-                            <div style={{ color: '#fff', fontWeight: 800, fontSize: 19, lineHeight: 1.15 }}>AI Interview Agent</div>
-                            <div style={{ color: '#D6CCF8', fontSize: 12, fontWeight: 500, marginTop: 2 }}>Your Personal AI Interviewer</div>
-                        </div>
-                    </div>
 
-                    <div style={{ marginTop: 'auto', marginBottom: 'auto', position: 'relative', zIndex: 1 }}>
-                        <h2 style={{ color: '#fff', fontSize: 'clamp(28px,5vw,42px)', lineHeight: 1.15, marginBottom: 0 }}>
-                            Your Personal<br />
-                            <span style={{ color: '#9B8AFB' }}>AI Interviewer</span>
-                        </h2>
-                        <ul className="brand-feats" style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            {features.map((f, i) => (
-                                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#E4DCFC', fontSize: 15 }}>
-                                    <CheckCircle2 size={18} color="#9B8AFB" /> {f}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                        <div style={{ marginTop: 'auto', marginBottom: 'auto', position: 'relative', zIndex: 1 }}>
+                            <h2 style={{ color: '#fff', fontSize: 'clamp(28px,5vw,42px)', lineHeight: 1.15, marginBottom: 0 }}>
+                                Your Personal<br />
+                                <span style={{ color: '#9B8AFB' }}>AI Interviewer</span>
+                            </h2>
+                            <ul className="brand-feats" style={{ marginTop: 36, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                {features.map((f, i) => (
+                                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#D9D2FA', fontSize: 15 }}>
+                                        <CheckCircle2 size={18} color="#9B8AFB" /> {f}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                 </div>
 
                 {/* ── Form ── */}
@@ -143,7 +143,7 @@ export default function Login() {
                                         className="cand-opt"
                                         style={{
                                             border: `2px solid ${isSel ? '#6C4DE6' : '#E6E1F5'}`,
-                                            background: isSel ? '#F8F7FF' : '#fff',
+                                            background: isSel ? '#F1EEFF' : '#fff',
                                             boxShadow: isSel ? '0 0 0 4px rgba(108,77,230,0.12)' : 'none',
                                             outline: isSel ? 'none' : undefined,
                                         }}>

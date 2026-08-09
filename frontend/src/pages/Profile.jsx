@@ -68,7 +68,7 @@ export default function Profile() {
     const statCards = [
         { label: 'Completed Days', val: completedDays, icon: <CalendarCheck size={18} color="#6C4DE6" />, bg: '#F1EEFF' },
         { label: 'Skipped Days', val: skippedDays, icon: <CalendarX size={18} color="#F43F5E" />, bg: '#FFE9EC' },
-        { label: 'Modules Completed', val: modulesCompleted, icon: <BookOpen size={18} color="#6C4DE6" />, bg: '#EDE9FE' },
+        { label: 'Modules Completed', val: modulesCompleted, icon: <BookOpen size={18} color="#6C4DE6" />, bg: '#E4DFFB' },
         { label: 'Overall Progress', val: `${progress}%`, icon: <TrendingUp size={18} color="#9B8AFB" />, bg: '#F8F7FF' },
     ];
 
