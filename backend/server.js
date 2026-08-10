@@ -10,7 +10,10 @@ const PORT = process.env.PORT || 3000;
 
 // Allowlist of allowed frontend origins (no unrestricted "*").
 // In production, set FRONTEND_URL to the real deployed frontend URL.
-const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173'];
+const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    'https://videcode.vercel.app',
+];
 
 const interviewRouter = require('./routes/interview');
 const candidatesRouter = require('./routes/candidates');
